@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.15.0)
+
 project(front_panel)
 
 enable_language(C CXX)
@@ -7,6 +8,7 @@ set(CMAKE_C_STANDARD 99)
 
 set(PROJECT_FILES
         main.cpp
+        startup.c
         )
 
 set(EXECUTABLE ${PROJECT_NAME}.elf)
@@ -14,7 +16,9 @@ set(EXECUTABLE ${PROJECT_NAME}.elf)
 add_executable(${EXECUTABLE} ${PROJECT_FILES})
 
 
-set(MACH cortex-m0)
+target_include_directories(${EXECUTABLE} PRIVATE)
+
+set(MACH cortex-m0plus)
 
 target_compile_options(${EXECUTABLE} PRIVATE
         -mcpu=${MACH}
@@ -22,5 +26,14 @@ target_compile_options(${EXECUTABLE} PRIVATE
         -mfloat-abi=soft
         -Wall
         -fno-exceptions
-        $<$<CONFIG:Debug>:-o0>
+        $<$<CONFIG:Debug>:-O0>
+        )
+
+target_link_options(${EXECUTABLE} PRIVATE
+        -T ${CMAKE_SOURCE_DIR}/linker.ld
+        -mcpu=${MACH}
+        -mthumb
+        -mfloat-abi=soft
+        --specs=nosys.specs
+        -Wl,-Map=${PROJECT_NAME}.map
         )
