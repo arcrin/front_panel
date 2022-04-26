@@ -33,6 +33,8 @@ SECTIONS
      } >FLASH
      __exidx_end = .;
 
+     _la_data = LOADADDR(.data);
+
     .data :
     {
         _sdata = .;
