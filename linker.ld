@@ -14,8 +14,13 @@ SECTIONS
         KEEP(*(.isr_vector))
         . = ALIGN(4);
     }> FLASH
+
     .text :
     {
+        . = ALIGN(4);
+        . = NEXT(0x400);
+        . = ALIGN(4);
+        KEEP(*(.security))
         *(.text)
         *(.text.*)
         *(.init)

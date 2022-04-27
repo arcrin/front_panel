@@ -115,6 +115,31 @@ uint32_t vectors[] __attribute__((section(".isr_vector"))) = {
         (uint32_t)PortCD_SingleInterrupt_Handler
 };
 
+
+struct Flash_Configuration_Field
+{
+    uint32_t Backdoor_Comparison_Key1;
+    uint32_t Backdoor_Comparison_Key2;
+    uint32_t Default_Program_Flash_Protection;
+    uint8_t Flash_Security;
+    uint8_t Flash_Option;
+    uint8_t FD_Protection;
+    uint8_t FE_Protection;
+};
+
+__attribute__((section(".security")))
+const struct Flash_Configuration_Field my_config =
+        {
+            0xFFFFFFFF,
+            0xFFFFFFFF,
+            0xFFFFFFFF,
+            0xFE,
+            0x3D,
+            0xFF,
+            0xFF
+        };
+
+
 void Default_Handler(void)
 {
     while(1);

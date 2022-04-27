@@ -1,9 +1,18 @@
 #include <stdint.h>
 #include <stdio.h>
 
+void delay(){
+    for(uint32_t i = 0; i < 500000/2; i++);
+}
+
+int counter = 3;
+int counter2 = 4;
+
 int main(){
-    uint32_t temp = 123;
-    while(1);
+    printf("%d", counter);
+    printf("%d", counter2);
+    while(1){
+    }
 }
 /*
  * This could be caused by a botched image running on the on-board target triggers a watchdog and asserts the reset line. In my K22 board this is visible also because the reset line is connected to an LED.
