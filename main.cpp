@@ -5,8 +5,8 @@ void delay(){
     for(uint32_t i = 0; i < 500000/2; i++);
 }
 
-int counter = 3;
-int counter2 = 4;
+int counter = 1;
+int counter2 = 2;
 
 int main(){
     printf("%d", counter);

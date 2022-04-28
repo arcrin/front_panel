@@ -5,6 +5,7 @@ project(front_panel)
 enable_language(C CXX)
 
 set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
 
 set(PROJECT_FILES
         drivers/Inc/k32lb11.h
