@@ -7,6 +7,7 @@ enable_language(C CXX)
 set(CMAKE_C_STANDARD 99)
 
 set(PROJECT_FILES
+        drivers/Inc/k32lb11.h
         main.cpp
         startup.c
         )
