@@ -18,7 +18,8 @@ set(EXECUTABLE ${PROJECT_NAME}.elf)
 add_executable(${EXECUTABLE} ${PROJECT_FILES})
 
 
-target_include_directories(${EXECUTABLE} PRIVATE)
+target_include_directories(${EXECUTABLE} PRIVATE
+        drivers/Inc)
 
 set(MACH cortex-m0plus)
 

@@ -1,5 +1,6 @@
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
+#include "k32lb11.h"
 
 void delay(){
     for(uint32_t i = 0; i < 500000/2; i++);
@@ -8,10 +9,22 @@ void delay(){
 int counter = 1;
 int counter2 = 2;
 
+
 int main(){
-    printf("%d", counter);
-    printf("%d", counter2);
+//    SIM->SIM_SCGC5 |= 1 << 13;
+//    PORTE->PORT_PCR[31] |= 0x1 << 8;
+//    PORTE->PORT_PCR[31] |= 0x2 << 0;
+//    GPIOE->PDDR |= 1 << 31;
+
+    PORTD_CLOCK_EN();
+    PORTD->PORT_PCR[5] |= 0x1 << 8;
+    PORTD->PORT_PCR[5] |= 0x2 << 0;
+    GPIOD->PDDR |= 1 << 5;
+
     while(1){
+//        GPIOE->PTOR |= 1 << 31;
+        GPIOD->PTOR |= 1 << 5;
+        delay();
     }
 }
 /*
