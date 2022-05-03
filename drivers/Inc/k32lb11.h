@@ -112,5 +112,14 @@ typedef struct {
 #define PORTD_CLOCK_DI()    SIM->SIM_SCGC5 &= ~(1 << 12)
 #define PORTE_CLOCK_DI()    SIM->SIM_SCGC5 &= ~(1 << 13)
 
-
+/*
+ * Generic macros
+ */
+#define DISABLE     0x0
+#define ENABLE      0x1
+#define LOW         0x0
+#define HIGH        0x1
 #endif //FRONT_PANEL_K32LB3X_H
+
+#include "gpio_driver.h"
+#include "port_driver.h"

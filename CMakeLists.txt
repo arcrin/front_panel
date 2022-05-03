@@ -9,6 +9,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(PROJECT_FILES
         drivers/Inc/k32lb11.h
+        drivers/Inc/gpio_driver.h
+        drivers/Inc/port_driver.h
+        drivers/Src/gpio_driver.cpp
+        drivers/Src/port_driver.cpp
         main.cpp
         startup.c
         )

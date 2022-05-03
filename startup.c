@@ -134,7 +134,7 @@ const struct Flash_Configuration_Field my_config =
             0xFFFFFFFF,
             0xFFFFFFFF,
             0xFE,
-            0x37,
+            0x3D,
             0xFF,
             0xFF
         };
