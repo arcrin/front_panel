@@ -40,7 +40,7 @@ void DMA2_Handler                   (void) __attribute__ ((weak, alias("Default_
 void DMA3_Handler                   (void) __attribute__ ((weak, alias("Default_Handler")));
 void FTFA_Handler                   (void) __attribute__ ((weak, alias("Default_Handler"))); // flash memory module
 void PMC_LowVoltage_Handler         (void) __attribute__ ((weak, alias("Default_Handler")));
-void LLWU_Handler                   (void) __attribute__ ((weak, alias("Default_Handler")));
+void LLWU_Handler                   (void);
 void I2C0_Handler                   (void) __attribute__ ((weak, alias("Default_Handler")));
 void I2C1_Handler                   (void) __attribute__ ((weak, alias("Default_Handler")));
 void SPI0_Handler                   (void) __attribute__ ((weak, alias("Default_Handler")));
@@ -146,6 +146,11 @@ void Default_Handler(void)
 }
 
 void HardFault_Handler(void)
+{
+    while(1);
+}
+
+void LLWU_Handler(void)
 {
     while(1);
 }
