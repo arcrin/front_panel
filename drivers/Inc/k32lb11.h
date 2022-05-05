@@ -13,6 +13,28 @@
 #define SRAM_LOW            0x1FFFE000
 #define SRAM_UPPER          0x20000000
 
+
+/*
+ * NVIC registers
+ */
+#define NVIC_ISER           (_vo uint32_t*) 0xE000E100
+#define NVIC_ICER           (_vo uint32_t*) 0xE000E180
+#define NVIC_ISPR           (_vo uint32_t*) 0xE000E200
+#define NVIC_ICPR           (_vo uint32_t*) 0xE000E280
+#define NVIC_IPR0           (_vo uint32_t*) 0xE000E400
+#define NVIC_IPR1           (_vo uint32_t*) 0xE000E404
+#define NVIC_IPR2           (_vo uint32_t*) 0xE000E408
+#define NVIC_IPR3           (_vo uint32_t*) 0xE000E40C
+#define NVIC_IPR4           (_vo uint32_t*) 0xE000E401
+#define NVIC_IPR5           (_vo uint32_t*) 0xE000E414
+#define NVIC_IPR6           (_vo uint32_t*) 0xE000E418
+#define NVIC_IPR7           (_vo uint32_t*) 0xE000E41C
+
+#define NVIC_IPR_BASEADDR   NVIC_IPR0
+
+#define NVIC_PRIORITY_BITS_IMPLEMENTED  2
+
+
 /*
  * Port Pin Control Registers
  */
@@ -111,6 +133,40 @@ typedef struct {
 #define PORTC_CLOCK_DI()    SIM->SIM_SCGC5 &= ~(1 << 11)
 #define PORTD_CLOCK_DI()    SIM->SIM_SCGC5 &= ~(1 << 12)
 #define PORTE_CLOCK_DI()    SIM->SIM_SCGC5 &= ~(1 << 13)
+
+
+/*
+ * IRQ Numbers
+ */
+#define IRQ_NUMBER_DMA0             0
+#define IRQ_NUMBER_DMA1             1
+#define IRQ_NUMBER_DMA2             2
+#define IRQ_NUMBER_DMA3             3
+#define IRQ_NUMBER_FTFA             5
+#define IRQ_NUMBER_PMC              6
+#define IRQ_NUMBER_LLWU             7
+#define IRQ_NUMBER_I2C0             8
+#define IRQ_NUMBER_I2C1             9
+#define IRQ_NUMBER_SPI0             10
+#define IRQ_NUMBER_SPI1             11
+#define IRQ_NUMBER_LPUART0          12
+#define IRQ_NUMBER_LPUART1          13
+#define IRQ_NUMBER_UART2_FLEXIO     14
+#define IRQ_NUMBER_ADC0             15
+#define IRQ_NUMBER_CMP0             16
+#define IRQ_NUMBER_TMP0             17
+#define IRQ_NUMBER_TMP1             18
+#define IRQ_NUMBER_TMP2             19
+#define IRQ_NUMBER_RTC_ALARM        20
+#define IRQ_NUMBER_RTC_SEC          21
+#define IRQ_NUMBER_PIT              22
+#define IRQ_NUMBER_USB              24
+#define IRQ_NUMBER_DAC0             25
+#define IRQ_NUMBER_LPTMR0           28
+#define IRQ_NUMBER_LCD              29
+#define IRQ_NUMBER_PORTA            30
+#define IRQ_NUMBER_PORTDC           31
+
 
 /*
  * Generic macros

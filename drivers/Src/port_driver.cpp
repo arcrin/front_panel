@@ -72,6 +72,10 @@ void PORT_Init(PORT_Handle_t* pPortHandle){
 
     uint8_t pin_number = pPortHandle->PORT_Config.PORT_Pin_Number;
 
+    // Interrupt configuration
+    pPortHandle->pPORT->PORT_PCR[pin_number] &= ~(0xF << 16); // clear interrupt config bits
+    pPortHandle->pPORT->PORT_PCR[pin_number] |= pPortHandle->PORT_Config.PORT_Pin_Interrupt_cfg << 16;
+
     // Port pin MUX config
     pPortHandle->pPORT->PORT_PCR[pin_number] &= ~(0x7 << 8);
     pPortHandle->pPORT->PORT_PCR[pin_number] |= pPortHandle->PORT_Config.PORT_Pin_Function << 8;
@@ -90,5 +94,66 @@ void PORT_Init(PORT_Handle_t* pPortHandle){
     }
     else if (pPortHandle->PORT_Config.PORT_Pin_Pull_Select == PULL_DOWN){
         pPortHandle->pPORT->PORT_PCR[pin_number] &= ~(0x1 << 0);
+    }
+}
+
+/*********************************************************************************************
+ * @fn          - PORT_InterruptConfiguration
+ *
+ * @brief       - Initialize or De-initialize interrupt
+ *
+ * @param[uint8_t]
+ *              - IRQNumber of the interrupt you would like to enable
+ *
+ * @param[uint8_t]
+ *              - Enable or disable
+ * @return      - None
+ *
+ * @Note        - None
+ *********************************************************************************************/
+void PORT_InterruptConfig(uint8_t IRQNumber, uint8_t ENorDI){
+    if (ENorDI == ENABLE) {
+        *NVIC_ISER |= 1 << IRQNumber;
+    } else if (ENorDI == DISABLE) {
+        *NVIC_ICER |= 1 << IRQNumber;
+    }
+}
+
+/*********************************************************************************************
+ * @fn          - PORT_IRQPriorityConfig
+ *
+ * @brief       - set priority for given IRQNumber
+ *
+ * @param[uint8_t]
+ *              - IRQNumber of the interrupt you would like to enable
+ *
+ * @param[uint8_t]
+ *              - priority
+ * @return      - None
+ *
+ * @Note        - None
+ *********************************************************************************************/
+void PORT_IRQPriorityConfig(uint8_t IRQNumber, uint32_t priority){
+    uint32_t register_offset = IRQNumber / 4;
+    uint32_t byte_offset = IRQNumber % 4;
+    // addresses are incremented by 4 bytes
+    *(NVIC_IPR_BASEADDR + register_offset) |= (priority << (8 - NVIC_PRIORITY_BITS_IMPLEMENTED)) << (byte_offset * 8);
+}
+
+/*********************************************************************************************
+ * @fn          - PORT_IRQHandling
+ *
+ * @brief       -
+ *
+ * @param[uint8_t]
+ *              -
+ *
+ * @return      - None
+ *
+ * @Note        - None
+ *********************************************************************************************/
+void PORT_IRQHandling(pPORT_RegDef_t pPORT, uint8_t PinNumber){
+    if (pPORT->PORT_PCR[PinNumber] & (1 << 24)){
+        pPORT->PORT_PCR[PinNumber] |= (1 << 24);
     }
 }

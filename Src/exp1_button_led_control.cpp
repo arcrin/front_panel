@@ -13,6 +13,7 @@ int main(){
     green_led_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
     green_led_port_handle.PORT_Config.PORT_Pin_Pull_Enable = ENABLE;
     green_led_port_handle.PORT_Config.PORT_Pin_Pull_Select = PULL_UP;
+    green_led_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
     PORT_Init(&green_led_port_handle);
 
     GPIO_Handle_t green_led_gpio_handle;
@@ -28,6 +29,8 @@ int main(){
     red_led_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
     red_led_port_handle.PORT_Config.PORT_Pin_Pull_Enable = ENABLE;
     red_led_port_handle.PORT_Config.PORT_Pin_Pull_Select = PULL_UP;
+    red_led_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+
     PORT_Init(&red_led_port_handle);
 
     GPIO_Handle_t red_led_gpio_handle;
@@ -42,6 +45,8 @@ int main(){
     sw1_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
     sw1_port_handle.PORT_Config.PORT_Pin_Pull_Enable = ENABLE;
     sw1_port_handle.PORT_Config.PORT_Pin_Pull_Select = PULL_UP;
+    sw1_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+
     PORT_Init(&sw1_port_handle);
 
     GPIO_Handle_t sw1_gpio_handle;
@@ -56,6 +61,7 @@ int main(){
     sw3_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
     sw3_port_handle.PORT_Config.PORT_Pin_Pull_Enable = ENABLE;
     sw3_port_handle.PORT_Config.PORT_Pin_Pull_Select = PULL_UP;
+    sw3_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
     PORT_Init(&sw3_port_handle);
 
     GPIO_Handle_t sw3_gpio_handle;
@@ -68,26 +74,28 @@ int main(){
 
     while(1){
         if(GPIO_ReadFromPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber) == 0){
-            GPIO_WriteOutputPin(red_led_gpio_handle.pGPIOx,
-                                red_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
-                                LOW);
+//            GPIO_WriteOutputPin(red_led_gpio_handle.pGPIOx,
+//                                red_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+//                                LOW);
+            GPIO_PinToggle(green_led_gpio_handle.pGPIOx, green_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
             delay();
         }
         else if (GPIO_ReadFromPin(sw3_gpio_handle.pGPIOx, sw3_gpio_handle.GPIO_Config.GPIO_PinNumber) == 0){
-            GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx,
-                                green_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
-                                LOW);
+//            GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx,
+//                                green_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+//                                LOW);
+            GPIO_PinToggle(red_led_gpio_handle.pGPIOx, red_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
             delay();
         }
-        else{
-            GPIO_WriteOutputPin(red_led_gpio_handle.pGPIOx,
-                                red_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
-                                HIGH);
-
-            GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx,
-                                green_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
-                                HIGH);
-        }
+//        else{
+//            GPIO_WriteOutputPin(red_led_gpio_handle.pGPIOx,
+//                                red_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+//                                HIGH);
+//
+//            GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx,
+//                                green_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+//                                HIGH);
+//        }
 //        GPIO_PinToggle(green_led_gpio_handle.pGPIOx, green_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
 //        delay();
     }

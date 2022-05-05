@@ -13,7 +13,7 @@ set(PROJECT_FILES
         drivers/Inc/port_driver.h
         drivers/Src/gpio_driver.cpp
         drivers/Src/port_driver.cpp
-        main.cpp
+        Src/exp2_button_interrupt_led_control.cpp
         startup.c
         )
 
