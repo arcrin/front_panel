@@ -8,7 +8,7 @@ void delay(){
 }
 
 int main(){
-    asm volatile ("cpsid i");
+    DISABLE_IEQ();
 
     // LED1 (green) set up
     PORT_Handle_t green_led_port_handle;
@@ -48,8 +48,8 @@ int main(){
     PORT_IRQPriorityConfig(IRQ_NUMBER_PORTA, 3);
     PORT_InterruptConfig(IRQ_NUMBER_PORTA, ENABLE);
 
-    *NVIC_ICPR |= 0xFFFFFFFF;
-    asm volatile ("cpsie i");
+    RESET_INTERRUPT();
+    ENABLE_IEQ();
     while(1);
 
 }

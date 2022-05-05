@@ -175,6 +175,11 @@ typedef struct {
 #define ENABLE      0x1
 #define LOW         0x0
 #define HIGH        0x1
+
+#define DISABLE_IEQ()       do{asm volatile("cpsid i");} while(0)
+#define ENABLE_IEQ()        do{asm volatile("cpsie i");} while(0)
+#define RESET_INTERRUPT()   do{*NVIC_ICPR |= 0xFFFFFFFF;} while(0)
+
 #endif //FRONT_PANEL_K32LB3X_H
 
 #include "gpio_driver.h"
