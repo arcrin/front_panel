@@ -35,9 +35,9 @@
 #define NVIC_PRIORITY_BITS_IMPLEMENTED  2
 
 
-/*
- * Port Pin Control Registers
- */
+/**********************************************
+ * Port Pin Control Registers peripheral def
+ **********************************************/
 #define PORTA_BASEADDR      0x40049000
 #define PORTB_BASEADDR      0x4004A000
 #define PORTC_BASEADDR      0x4004B000
@@ -48,11 +48,11 @@ typedef struct {
     _vo uint32_t PORT_PCR[32];
     _vo uint32_t PORT_GPCLR;
     _vo uint32_t PORT_GPCHR;
-}PORT_RegDef_t, *pPORT_RegDef_t;
+} PORT_RegDef_t, *pPORT_RegDef_t;
 
-/*
- * System Integration Module Registers
- */
+/*****************************************************
+ * System Integration Module Registers peripheral def
+ *****************************************************/
 #define SIM_BASEADDR        0x40047000
 
 typedef struct {
@@ -86,9 +86,9 @@ typedef struct {
 }SIM_RegDef_t, *pSIM_RegDef_t;
 
 
-/*
- * GPIO Registers
- */
+/************************************************
+ * GPIO peripheral def
+ ************************************************/
 #define GPIOA_BASEADDR      0x400FF000
 #define GPIOB_BASEADDR      0x400FF040
 #define GPIOC_BASEADDR      0x400FF080
@@ -119,9 +119,7 @@ typedef struct {
 #define GPIOE   ((pGPIO_RegDef_t) GPIOE_BASEADDR)
 
 
-/*
- * Clock Gate Control Macros
- */
+// Clock controls
 #define PORTA_CLOCK_EN()    SIM->SIM_SCGC5 |= 1 << 9
 #define PORTB_CLOCK_EN()    SIM->SIM_SCGC5 |= 1 << 10
 #define PORTC_CLOCK_EN()    SIM->SIM_SCGC5 |= 1 << 11
@@ -133,6 +131,37 @@ typedef struct {
 #define PORTC_CLOCK_DI()    SIM->SIM_SCGC5 &= ~(1 << 11)
 #define PORTD_CLOCK_DI()    SIM->SIM_SCGC5 &= ~(1 << 12)
 #define PORTE_CLOCK_DI()    SIM->SIM_SCGC5 &= ~(1 << 13)
+
+
+/*********************************************
+ * SPI peripheral def
+ *********************************************/
+#define SPI0_BASEADDR   0x40076000
+#define SPI1_BASEADDR   0x40077000
+
+typedef struct {
+    _vo uint8_t S; // status register
+    _vo uint8_t BR; // baud rate
+    _vo uint8_t C2; // control register 2
+    _vo uint8_t C1; // control register 1
+    _vo uint8_t ML; // match register low
+    _vo uint8_t MH; // match register high
+    _vo uint8_t DL; // data register low
+    _vo uint8_t DH; // data register high
+    _vo uint8_t CI; // clear interrupt
+    _vo uint8_t C3; // control register 3
+} SPI_RegDef_t, *pSPI_RegDef_t;
+
+#define SPI0    ((pSPI_RegDef_t) SPI0_BASEADDR)
+#define SPI1    ((pSPI_RegDef_t) SPI1_BASEADDR)
+
+#define SPI0_CLOCK_EN()     SIM->SIM_SCGC4 |= 1 << 22
+#define SPI1_CLOCK_EN()     SIM->SIM_SCGC4 |= 1 << 23
+
+#define SPI0_CLOCK_DI()     SIM->SIM_SCGC4 &= ~(1 << 22)
+#define SPI1_CLOCK_DI()     SIM->SIM_SCGC4 &= ~(1 << 23)
+
+
 
 
 /*
