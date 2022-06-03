@@ -53,15 +53,90 @@ void SPI_Init(pSPI_Handle_t pSPIHandle){
     pSPIHandle->pSPIx->BR |= pSPIHandle->SPIConfig.SPI_BR_PRE << SPI_BR_PRE_BITS;
     pSPIHandle->pSPIx->BR |= pSPIHandle->SPIConfig.SPI_BR_DIV << SPI_BR_DIV_BITS;
     // data frame format config
-    pSPIHandle->pSPIx->C1 |= pSPIHandle->SPIConfig.SPI_DFF << SPI_C2_SPIMODE;
+    pSPIHandle->pSPIx->C2 |= pSPIHandle->SPIConfig.SPI_MODE << SPI_C2_SPIMODE;
     // device mode
     pSPIHandle->pSPIx->C1 |= pSPIHandle->SPIConfig.SPI_DeviceMode << SPI_C1_MSTR;
     // clock polarity
     pSPIHandle->pSPIx->C1 |= pSPIHandle->SPIConfig.SPI_CPOL << SPI_C1_CPOL;
     // clock phase
-    pSPIHandle->pSPIx->C1 |= pSPIHandle->SPIConfig.SPI_CPHA << SPI_C1_CPHA;
-    // I don't need automated NSS pin, I can use a GPIO pin to select slave
-    pSPIHandle->pSPIx->C1 |= pSPIHandle->SPIConfig.SPI_SSOE << SPI_C1_SSOE;
-    // MSB is transmitted first by default
+    if(pSPIHandle->SPIConfig.SPI_CPHA == SPI_CPHA_LOW)
+        pSPIHandle->pSPIx->C1 &= ~(1 << SPI_C1_CPHA);
+    else if(pSPIHandle->SPIConfig.SPI_CPHA == SPI_CPHA_HIGH)
+        pSPIHandle->pSPIx->C1 |= 1 << SPI_C1_CPHA;
 
+    // Following configuration provides software (automatic) slave select control
+    // TODO: This should also be a configurable option
+    pSPIHandle->pSPIx->C2 |= 1 << SPI_C2_MODFEN; // clear MODFEN pin, NSS pin is set to GPIO
+    pSPIHandle->pSPIx->C1 |= 1 << SPI_C1_SSOE;
+    // MSB is transmitted first by default
+}
+
+uint8_t SPI_GetFlagStatus(pSPI_RegDef_t pSPIx, uint32_t FlagName){
+    if (pSPIx->S & FlagName) {
+        return FLAG_SET;
+    }
+    return FLAG_RESET;
+}
+
+/********************************************************
+ * @fn				- SPI_Send_Data
+ *
+ * @brief			- blocking api for sending data
+ *
+ * @param[pSPI_RegDef_t]
+ *                  - pointer to SPI peripheral
+ * @param[uint8_t]  - pointer to transmit buffer
+ * @param[uint23_t] - length of the data to be sent (number of bytes)
+ *
+ * @return			- None
+ *
+ * @Note			- blocking call
+ ********************************************************/
+void SPI_Send_Data(pSPI_RegDef_t pSPIx, uint8_t *pTxBuffer, uint32_t Len){
+    while (Len > 0) {
+        // 1. wait until transmit flag is set
+        while(SPI_GetFlagStatus(pSPIx, SPI_TX_EMPTY_FLAG) == FLAG_RESET); // while the TX buffer is NOT empty
+        // 2. check the data frame bit in C2
+        if(pSPIx->C2 & (1 << SPI_C2_SPIMODE)){
+            // 16-bit mode
+            // 1. load the data to the DR(Data Register) register
+            pSPIx->DL = *((uint16_t *) pTxBuffer);
+            Len--;
+            Len--;
+            (uint16_t *) pTxBuffer++;
+        } else {
+            // 8-bit mode
+            pSPIx->DL = *pTxBuffer;
+            Len--;
+            pTxBuffer++;
+        }
+    }
+}
+
+void SPI_Receive_Data(pSPI_RegDef_t pSPIx, uint8_t *pRxBuffer, uint32_t Len){
+    while (Len > 0) {
+        while(SPI_GetFlagStatus(pSPIx, SPI_RX_FULL_FLAG) == SPI_RX_FULL_FLAG); // while the RX buffer is empty
+        if (pSPIx->C2 & (1 << SPI_C2_SPIMODE)) {
+            // 16-bit mode
+            *(uint16_t *) pRxBuffer = pSPIx->DL;
+            Len--;
+            Len--;
+            (uint16_t *) pRxBuffer++;
+        } else {
+            *pRxBuffer = pSPIx->DL;
+            Len--;
+            pRxBuffer++;
+        }
+    }
+}
+
+/*
+ * other peripheral APIs
+ */
+void SPI_PeriControl(SPI_RegDef_t *pSPIx, uint8_t ENorDI){
+    if (ENorDI == ENABLE) {
+        pSPIx->C1 |= (1 << SPI_C1_SPE);
+    } else if (ENorDI == DISABLE) {
+        pSPIx->C1 &= ~(1 << SPI_C1_SPE);
+    }
 }
