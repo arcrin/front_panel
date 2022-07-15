@@ -162,6 +162,27 @@ typedef struct {
 #define SPI1_CLOCK_DI()     SIM->SIM_SCGC4 &= ~(1 << 23)
 
 
+/*****************************************************************************
+ * SysTick peripheral def
+ * The default clock source is low frequency internal reference clock (LIRC)
+ * See MCG Lite module for more configuration (Chapter 27)
+ *****************************************************************************/
+typedef struct {
+    _vo uint32_t CSR;
+    _vo uint32_t RVR;
+    _vo uint32_t CVR;
+    _vo uint32_t CALIB;
+} SysTick_RegDef, *pSysTick_RegDef_t;
+
+#define SysTick     ((pSysTick_RegDef_t) 0XE000E010)
+
+extern volatile uint32_t sysTick_count;
+
+void SysTick_Init(uint32_t load_value);
+
+uint32_t get_tick();
+
+void delay(uint32_t delay_in_ms);
 
 
 /*
