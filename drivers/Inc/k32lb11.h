@@ -162,6 +162,31 @@ typedef struct {
 #define SPI1_CLOCK_DI()     SIM->SIM_SCGC4 &= ~(1 << 23)
 
 
+/**************************************************
+ * I2C peripheral def
+ **************************************************/
+#define I2C0_BASEADDR 0x40066000
+#define I2C1_BASEADDR 0x40067000
+
+typedef struct {
+    _vo uint8_t A1;
+    _vo uint8_t F;
+    _vo uint8_t C1;
+    _vo uint8_t S;
+    _vo uint8_t D;
+    _vo uint8_t C2;
+    _vo uint8_t FLT;
+    _vo uint8_t RA;
+    _vo uint8_t SMB;
+    _vo uint8_t A2;
+    _vo uint8_t SLTH;
+    _vo uint8_t SLTL;
+    _vo uint8_t S2;
+} I2C_RegDef_t;
+
+#define I2C0    ((I2C_RegDef_t*) I2C0_BASEADDR)
+#define I2C1    ((I2C_RegDef_t*) I2C1_BASEADDR)
+
 /*****************************************************************************
  * SysTick peripheral def
  * The default clock source is low frequency internal reference clock (LIRC)
