@@ -24,12 +24,12 @@ int main(){
     green_led_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_OUTPUT;
     GPIO_Init(&green_led_gpio_handle);
 
-    SysTick_Init(8000);
+    SysTick_Init(800); // each tick is 0.1 ms
 
     ENABLE_IRQ();
 
     while(1){
         GPIO_PinToggle(green_led_gpio_handle.pGPIOx, 5);
-        delay(10);
+        delay(1);
     }
 }

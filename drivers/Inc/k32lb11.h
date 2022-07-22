@@ -187,6 +187,12 @@ typedef struct {
 #define I2C0    ((I2C_RegDef_t*) I2C0_BASEADDR)
 #define I2C1    ((I2C_RegDef_t*) I2C1_BASEADDR)
 
+#define I2C0_CLOCK_EN() SIM->SIM_SCGC4 |= (1 << 6)
+#define I2C1_CLOCK_EN() SIM->SIM_SCGC4 |= (1 << 7)
+
+#define I2C0_CLOCK_DI() SIM->SIM_SCGC4 &= ~(1 << 6)
+#define I2C1_CLOCK_DI() SIM->SIM_SCGC4 &= ~(1 << 7)
+
 /*****************************************************************************
  * SysTick peripheral def
  * The default clock source is low frequency internal reference clock (LIRC)
@@ -264,3 +270,4 @@ void delay(uint32_t delay_in_ms);
 #include "gpio_driver.h"
 #include "port_driver.h"
 #include "spi_driver.h"
+#include "i2c_driver.h"
