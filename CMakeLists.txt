@@ -18,7 +18,7 @@ set(PROJECT_FILES
         drivers/Src/spi_driver.cpp
         drivers/Inc/i2c_driver.h
         drivers/Src/i2c_driver.cpp
-        Src/exp6_i2c_test.cpp
+        Src/exp7_i2c_master_rx.cpp
         startup.c
         )
 

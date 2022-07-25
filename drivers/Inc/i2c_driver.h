@@ -70,6 +70,14 @@ typedef struct {
 #define I2C_S2_EMPTY    0 // Empty Flag
 #define I2C_S2_ERROR    1 // Error Flag
 
+/********************************************
+ * Other macros
+ ********************************************/
+#define I2C_DISABLE_SR  	RESET
+#define I2C_ENABLE_SR   	SET
+#define I2C_ACK_ENABLE        1
+#define I2C_ACK_DISABLE       0
+
 /***************************************
  * Flag definition
  ***************************************/
@@ -103,9 +111,9 @@ void I2C_Init(I2C_Handle_t *pI2CHandle);
 /*
  * set and receive data
  */
-void I2C_MasterSendData();
+void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t generate_rs, bool after_rs);
 
-void I2C_MasterReceiveData();
+void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t generate_rs, bool after_rs);
 
 void I2C_SlaveSendData();
 
@@ -124,7 +132,12 @@ void I2C_ManageAcking();
 /*
  * start and stop conditions
  */
-void I2C_GenerateStartCondition();
-void I2C_GenerateStopCondition();
+uint8_t I2C_GenerateStartCondition(I2C_RegDef_t *pI2Cx);
+
+uint8_t I2C_GenerateStopCondition(I2C_RegDef_t *pI2Cx);
+
+void I2C_ExecuteAddressPhaseWrite(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
+
+void I2C_ExecuteAddressPhaseRead(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
 
 #endif //FRONT_PANEL_I2C_DRIVER_H

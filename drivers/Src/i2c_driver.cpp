@@ -2,17 +2,11 @@
 // Created by andy- on 2022-07-17.
 //
 #include "k32lb11.h"
-
-static uint8_t I2C_GenerateStartCondition(I2C_RegDef_t *pI2Cx);
-
-static uint8_t I2C_GenerateStopCondition(I2C_RegDef_t *pI2Cx);
-
-static void I2C_ExecuteAddressPhaseWrite(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
-
-static void I2C_ExecuteAddressPhaseRead(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
+#include <cstring>
 
 
-static uint8_t I2C_GenerateStartCondition(I2C_RegDef_t *pI2C){
+
+uint8_t I2C_GenerateStartCondition(I2C_RegDef_t *pI2C){
     if (pI2C->C1 & (1 << 5)){ // turn on MST bit only if it is 0
         return false;
     }
@@ -20,7 +14,11 @@ static uint8_t I2C_GenerateStartCondition(I2C_RegDef_t *pI2C){
     return true;
 }
 
-static uint8_t I2C_GenerateStopCondition(I2C_RegDef_t *pI2C){
+void I2C_RepeatedStart(I2C_RegDef_t *pI2C){
+    pI2C->C1 |= 1 << I2C_C1_RSTA;
+}
+
+uint8_t I2C_GenerateStopCondition(I2C_RegDef_t *pI2C){
     if (pI2C->C1 & (1 << 5)){ // turn off MST bit only if it is 1
         pI2C->C1 &= ~(1 << 5);
         return true;
@@ -28,16 +26,26 @@ static uint8_t I2C_GenerateStopCondition(I2C_RegDef_t *pI2C){
     return false;
 }
 
-static void I2C_ExecuteAddressPhaseWrite(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr){
+void I2C_ExecuteAddressPhaseWrite(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr){
     SlaveAddr = SlaveAddr << 1;
     SlaveAddr &= ~(1);
     pI2Cx->D = SlaveAddr;
 }
 
-static void I2C_ExecuteAddressPhaseRead(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr){
+void I2C_ExecuteAddressPhaseRead(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr){
     SlaveAddr = SlaveAddr << 1;
     SlaveAddr |= 1; // set R/nW bit to 1, the 8th bit
     pI2Cx->D = SlaveAddr;
+}
+
+void I2C_ManageAcking(I2C_RegDef_t *pI2Cx, uint8_t EnOrDi){
+    if (EnOrDi == I2C_ACK_ENABLE) {
+        // enable the ack
+        pI2Cx->C1 |= 1 << I2C_C1_TXAK;
+    } else if (EnOrDi == I2C_ACK_DISABLE) {
+        // disable the ack
+        pI2Cx->C1 &= ~(1 << I2C_C1_TXAK);
+    }
 }
 
 void I2C_PeripheralClockControl(I2C_RegDef_t *pI2Cx, uint8_t EnOrDi){
@@ -94,6 +102,70 @@ uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint32_t FlagName, uint8_t SrNumb
     }
 }
 
-void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t Sr){
+void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t generate_rs, bool after_rs){
+    // Transmit mode
+    pI2CHandle->pI2Cx->C1 |= 1 << I2C_C1_TX;
+    // Start condition
+    if (!after_rs){
+        I2C_GenerateStartCondition(pI2CHandle->pI2Cx);
+    }
+    I2C_ExecuteAddressPhaseWrite(pI2CHandle->pI2Cx, SlaveAddr);
+    while (!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
+    while(Len > 0){
+        pI2CHandle->pI2Cx->D = *pTxBuffer;
+        while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
+        pTxBuffer++;
+        Len--;
+    }
+    if (generate_rs == I2C_DISABLE_SR){
+        I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
+    } else if (generate_rs == I2C_ENABLE_SR) {
+        I2C_RepeatedStart(pI2CHandle->pI2Cx);
+    }
+}
 
+
+void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t generate_rs, bool after_rs){
+    // stay in transmit mode until AddressRead is sent out?
+    pI2CHandle->pI2Cx->C1 |= (1 << I2C_C1_TX);
+    // Start condition
+    if(!after_rs){
+        I2C_GenerateStartCondition(pI2CHandle->pI2Cx);
+    }
+    // Send Address with read bit
+    I2C_ExecuteAddressPhaseRead(pI2CHandle->pI2Cx, SlaveAddr);
+
+    while (!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
+
+    // receiving one byte
+    if(Len == 1){
+        // Disable Acking
+        I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_DISABLE);
+        // Receiveer mode
+        pI2CHandle->pI2Cx->C1 &= ~(1 << I2C_C1_TX);
+    }
+    if (generate_rs == I2C_DISABLE_SR) {
+        I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
+    }
+
+    // read data into buffer
+    *pRxBuffer = pI2CHandle->pI2Cx->D;
+
+    // receiving more than one byte
+    if (Len > 1) {
+        for (uint32_t i = Len; i > 0; i--) {
+            while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
+            if (i == 2) {
+                I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_DISABLE);
+                if (generate_rs == I2C_DISABLE_SR) {
+                    I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
+                }
+            }
+            *pRxBuffer = pI2CHandle->pI2Cx->D;
+            pRxBuffer++;
+        }
+    }
+    if (pI2CHandle->I2C_Config.I2C_AckControl == I2C_ACK_ENABLE) {
+        I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_ENABLE);
+    }
 }
