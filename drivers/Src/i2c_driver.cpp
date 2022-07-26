@@ -39,10 +39,10 @@ void I2C_ExecuteAddressPhaseRead(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr){
 }
 
 void I2C_ManageAcking(I2C_RegDef_t *pI2Cx, uint8_t EnOrDi){
-    if (EnOrDi == I2C_ACK_ENABLE) {
+    if (EnOrDi == I2C_ACK_DISABLE) {
         // enable the ack
         pI2Cx->C1 |= 1 << I2C_C1_TXAK;
-    } else if (EnOrDi == I2C_ACK_DISABLE) {
+    } else if (EnOrDi == I2C_ACK_ENABLE) {
         // disable the ack
         pI2Cx->C1 &= ~(1 << I2C_C1_TXAK);
     }
@@ -102,12 +102,19 @@ uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint32_t FlagName, uint8_t SrNumb
     }
 }
 
-void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t generate_rs, bool after_rs){
+void I2C_MasterSendData(I2C_Handle_t *pI2CHandle,
+                        uint8_t *pTxBuffer,
+                        uint32_t Len,
+                        uint8_t SlaveAddr,
+                        uint8_t stop_condition,
+                        bool initial_start_condition){
     // Transmit mode
     pI2CHandle->pI2Cx->C1 |= 1 << I2C_C1_TX;
     // Start condition
-    if (!after_rs){
+    if (initial_start_condition){
         I2C_GenerateStartCondition(pI2CHandle->pI2Cx);
+    } else {
+        I2C_RepeatedStart(pI2CHandle->pI2Cx);
     }
     I2C_ExecuteAddressPhaseWrite(pI2CHandle->pI2Cx, SlaveAddr);
     while (!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
@@ -117,39 +124,33 @@ void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t L
         pTxBuffer++;
         Len--;
     }
-    if (generate_rs == I2C_DISABLE_SR){
+    if (stop_condition){
         I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
-    } else if (generate_rs == I2C_ENABLE_SR) {
-        I2C_RepeatedStart(pI2CHandle->pI2Cx);
     }
 }
 
 
-void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t generate_rs, bool after_rs){
+void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t stop_condition, bool initial_start_condition){
+    uint8_t dummy_read;
     // stay in transmit mode until AddressRead is sent out?
     pI2CHandle->pI2Cx->C1 |= (1 << I2C_C1_TX);
     // Start condition
-    if(!after_rs){
+    if(initial_start_condition){
         I2C_GenerateStartCondition(pI2CHandle->pI2Cx);
+    } else {
+        I2C_RepeatedStart(pI2CHandle->pI2Cx);
     }
-    // Send Address with read bit
     I2C_ExecuteAddressPhaseRead(pI2CHandle->pI2Cx, SlaveAddr);
-
     while (!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
-
-    // receiving one byte
     if(Len == 1){
-        // Disable Acking
-        I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_DISABLE);
-        // Receiveer mode
         pI2CHandle->pI2Cx->C1 &= ~(1 << I2C_C1_TX);
-    }
-    if (generate_rs == I2C_DISABLE_SR) {
+        I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_DISABLE);
+        *pRxBuffer = pI2CHandle->pI2Cx->D;
+        while (!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
         I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
+        *pRxBuffer = pI2CHandle->pI2Cx->D;
     }
 
-    // read data into buffer
-    *pRxBuffer = pI2CHandle->pI2Cx->D;
 
     // receiving more than one byte
     if (Len > 1) {
@@ -157,7 +158,7 @@ void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
             while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
             if (i == 2) {
                 I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_DISABLE);
-                if (generate_rs == I2C_DISABLE_SR) {
+                if (stop_condition == I2C_DISABLE_SR) {
                     I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
                 }
             }
@@ -165,6 +166,8 @@ void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
             pRxBuffer++;
         }
     }
+
+
     if (pI2CHandle->I2C_Config.I2C_AckControl == I2C_ACK_ENABLE) {
         I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_ENABLE);
     }

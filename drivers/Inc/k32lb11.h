@@ -193,6 +193,28 @@ typedef struct {
 #define I2C0_CLOCK_DI() SIM->SIM_SCGC4 &= ~(1 << 6)
 #define I2C1_CLOCK_DI() SIM->SIM_SCGC4 &= ~(1 << 7)
 
+
+/******************************************
+ * MCG peripheral def
+ ******************************************/
+#define MCG_BASEADDR    0x40064000
+typedef struct {
+    _vo uint8_t C1;
+    _vo uint8_t C2;
+    _vo uint8_t reserve0;
+    _vo uint8_t reserve1;
+    _vo uint8_t reserve2;
+    _vo uint8_t reserve3;
+    _vo uint8_t S;
+    _vo uint8_t reserve4;
+    _vo uint8_t SC;
+    _vo uint8_t MC;
+} MCG_RegDef_t;
+
+#define MCG ((MCG_RegDef_t*) MCG_BASEADDR)
+
+void MCG_Init();
+
 /*****************************************************************************
  * SysTick peripheral def
  * The default clock source is low frequency internal reference clock (LIRC)

@@ -86,20 +86,16 @@ void I2C0_Init(){
 int main(){
     DISABLE_IRQ();
     SysTick_Init(800);
-
     I2C0_Port_Pin_Init();
-    // set up I2C baud rate
     I2C0_Init();
-
     SW1_Init();
-
+    i2c0_handle.pI2Cx->C1 |= 1 << I2C_C1_IICEN;
     ENABLE_IRQ();
 
     while(1) {
-        // Enable I2C module
-        i2c0_handle.pI2Cx->C1 |= 1 << I2C_C1_IICEN;
+
         while (GPIO_ReadFromPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber));
         delay(1000); // 100 ms delay
-        I2C_MasterSendData(&i2c0_handle, sample_data, strlen((char *) sample_data), slave_address, 0);
+        I2C_MasterSendData(&i2c0_handle, sample_data, strlen((char *) sample_data), slave_address, true, true);
     }
 }

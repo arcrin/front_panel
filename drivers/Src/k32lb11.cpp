@@ -6,6 +6,15 @@
 
 _vo uint32_t sysTick_count;
 
+void MCG_Init(){
+    uint8_t temp;
+    temp = 0x40;
+    MCG->C1 = temp;
+
+    temp = 0x1;
+    MCG->C2 = temp;
+}
+
 void SysTick_Init(uint32_t load_value){
     SysTick->CSR = 0UL;
     SysTick->RVR = load_value;

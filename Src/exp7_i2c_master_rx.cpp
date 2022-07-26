@@ -13,6 +13,7 @@ PORT_Handle_t sw1_port_handle;
 GPIO_Handle_t sw1_gpio_handle;
 
 uint8_t rcv_buffer[32];
+uint8_t sample_data = 0x51;
 
 void SW1_Init(){
     PORT_Handle_t green_led_port_handle;
@@ -81,29 +82,37 @@ void I2C0_Port_Pin_Init(){
 void I2C0_Init(){
     i2c0_handle.pI2Cx = I2C0;
     i2c0_handle.I2C_Config.I2C_DeviceAddress = own_address;
+    i2c0_handle.I2C_Config.I2C_AckControl = I2C_ACK_ENABLE;
     I2C_Init(&i2c0_handle);
 }
 
 int main(){
     DISABLE_IRQ();
     uint8_t command_code;
-    uint8_t rcv_data_len;
+
+    MCG_Init();
     SysTick_Init(800);
     I2C0_Port_Pin_Init();
     I2C0_Init();
     SW1_Init();
     // Enable I2C module
     i2c0_handle.pI2Cx->C1 |= 1 << I2C_C1_IICEN;
+//    i2c0_handle.pI2Cx->C1 |= 1 << I2C_C1_IICIE;
     ENABLE_IRQ();
 
     while(1) {
+        uint8_t rcv_data_len;
         while(GPIO_ReadFromPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber));
         delay(1000);
+        uint8_t temp;
         command_code = 0x51;
-        I2C_MasterSendData(&i2c0_handle, &command_code, 1, slave_address, I2C_ENABLE_SR, false);
-        I2C_MasterReceiveData(&i2c0_handle, &rcv_data_len, 1, slave_address, I2C_ENABLE_SR, true);
-        command_code = 0x52;
-        I2C_MasterSendData(&i2c0_handle, &command_code, 1, slave_address, I2C_ENABLE_SR, true);
-        I2C_MasterReceiveData(&i2c0_handle, rcv_buffer, rcv_data_len, slave_address, I2C_DISABLE_SR, true);
+//        I2C_MasterSendData(&i2c0_handle, &command_code, 1, slave_address, false, true);
+//        I2C_MasterReceiveData(&i2c0_handle, &rcv_data_len, 1, slave_address,true, false);
+//        command_code = 0x52;
+//        I2C_MasterSendData(&i2c0_handle, &command_code, 1, slave_address, false, false);
+//        I2C_MasterReceiveData(&i2c0_handle, rcv_buffer, rcv_data_len, slave_address, true, false);
+
+        I2C_MasterReceiveData(&i2c0_handle, &rcv_data_len, 1, slave_address,true, true);
+        temp = rcv_data_len;
     }
 }
