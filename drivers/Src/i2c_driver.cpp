@@ -18,6 +18,11 @@ void I2C_RepeatedStart(I2C_RegDef_t *pI2C){
     pI2C->C1 |= 1 << I2C_C1_RSTA;
 }
 
+void I2C_GetStartDetectionFlagThenClear(I2C_RegDef_t *pI2Cx){
+    while(!(pI2Cx->FLT & (1 << I2C_FLT_STARTF)));
+    pI2Cx->FLT |= (1 << I2C_FLT_STARTF);
+}
+
 uint8_t I2C_GenerateStopCondition(I2C_RegDef_t *pI2C){
     if (pI2C->C1 & (1 << 5)){ // turn off MST bit only if it is 1
         pI2C->C1 &= ~(1 << 5);
@@ -116,6 +121,7 @@ void I2C_MasterSendData(I2C_Handle_t *pI2CHandle,
     } else {
         I2C_RepeatedStart(pI2CHandle->pI2Cx);
     }
+    I2C_GetStartDetectionFlagThenClear(pI2CHandle->pI2Cx);
     I2C_ExecuteAddressPhaseWrite(pI2CHandle->pI2Cx, SlaveAddr);
     while (!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
     while(Len > 0){
@@ -131,7 +137,6 @@ void I2C_MasterSendData(I2C_Handle_t *pI2CHandle,
 
 
 void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t stop_condition, bool initial_start_condition){
-    uint8_t dummy_read;
     // stay in transmit mode until AddressRead is sent out?
     pI2CHandle->pI2Cx->C1 |= (1 << I2C_C1_TX);
     // Start condition
@@ -140,22 +145,32 @@ void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
     } else {
         I2C_RepeatedStart(pI2CHandle->pI2Cx);
     }
+    I2C_GetStartDetectionFlagThenClear(pI2CHandle->pI2Cx);
     I2C_ExecuteAddressPhaseRead(pI2CHandle->pI2Cx, SlaveAddr);
     while (!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
+
     if(Len == 1){
-        pI2CHandle->pI2Cx->C1 &= ~(1 << I2C_C1_TX);
         I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_DISABLE);
+        pI2CHandle->pI2Cx->C1 &= ~(1 << I2C_C1_TX);
         *pRxBuffer = pI2CHandle->pI2Cx->D;
         while (!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
-        I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
+        if (stop_condition){
+            I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
+        } else {
+            I2C_RepeatedStart(pI2CHandle->pI2Cx);
+        }
         *pRxBuffer = pI2CHandle->pI2Cx->D;
+        while (!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
     }
 
 
     // receiving more than one byte
+    // TODO: switch to receive mode
+    // TODO: enable ACK
     if (Len > 1) {
+        I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_ENABLE);
+        pI2CHandle->pI2Cx->C1 &= ~(1 << I2C_C1_TX);
         for (uint32_t i = Len; i > 0; i--) {
-            while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
             if (i == 2) {
                 I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_DISABLE);
                 if (stop_condition == I2C_DISABLE_SR) {
@@ -163,12 +178,8 @@ void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
                 }
             }
             *pRxBuffer = pI2CHandle->pI2Cx->D;
+            while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
             pRxBuffer++;
         }
-    }
-
-
-    if (pI2CHandle->I2C_Config.I2C_AckControl == I2C_ACK_ENABLE) {
-        I2C_ManageAcking(pI2CHandle->pI2Cx, I2C_ACK_ENABLE);
     }
 }

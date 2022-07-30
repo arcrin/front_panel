@@ -70,6 +70,13 @@ typedef struct {
 #define I2C_S2_EMPTY    0 // Empty Flag
 #define I2C_S2_ERROR    1 // Error Flag
 
+// Glitch Filter Register
+#define I2C_FLT_FLT     0
+#define I2C_FLT_STARTF  4
+#define I2C_FLT_SSIE    5
+#define I2C_FLT_STOPF   6
+#define I2C_FLT_SHEN    7
+
 /********************************************
  * Other macros
  ********************************************/
@@ -111,7 +118,7 @@ void I2C_Init(I2C_Handle_t *pI2CHandle);
 /*
  * set and receive data
  */
-void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t stop_condition, bool after_rs);
+void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t stop_condition, bool initial_start_condition);
 
 void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t stop_condition, bool initial_start_condition);
 
@@ -134,7 +141,11 @@ void I2C_ManageAcking();
  */
 uint8_t I2C_GenerateStartCondition(I2C_RegDef_t *pI2Cx);
 
+void I2C_GetStartDetectionFlagThenClear(I2C_RegDef_t *pI2Cx);
+
 uint8_t I2C_GenerateStopCondition(I2C_RegDef_t *pI2Cx);
+
+void I2C_ClearStopConditionDetectionFlag(I2C_RegDef_t *pI2Cx);
 
 void I2C_ExecuteAddressPhaseWrite(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
 

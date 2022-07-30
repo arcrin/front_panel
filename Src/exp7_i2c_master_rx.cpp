@@ -106,13 +106,13 @@ int main(){
         delay(1000);
         uint8_t temp;
         command_code = 0x51;
-//        I2C_MasterSendData(&i2c0_handle, &command_code, 1, slave_address, false, true);
-//        I2C_MasterReceiveData(&i2c0_handle, &rcv_data_len, 1, slave_address,true, false);
-//        command_code = 0x52;
-//        I2C_MasterSendData(&i2c0_handle, &command_code, 1, slave_address, false, false);
-//        I2C_MasterReceiveData(&i2c0_handle, rcv_buffer, rcv_data_len, slave_address, true, false);
+        I2C_MasterSendData(&i2c0_handle, &command_code, 1, slave_address, false, true);
+        I2C_MasterReceiveData(&i2c0_handle, &rcv_data_len, 1, slave_address,true, false);
+        command_code = 0x52;
+        I2C_MasterSendData(&i2c0_handle, &command_code, 1, slave_address, false, true);
+        I2C_MasterReceiveData(&i2c0_handle, rcv_buffer, rcv_data_len, slave_address, true, false);
 
-        I2C_MasterReceiveData(&i2c0_handle, &rcv_data_len, 1, slave_address,true, true);
-        temp = rcv_data_len;
+//        I2C_MasterReceiveData(&i2c0_handle, &rcv_data_len, 1, slave_address,true, true);
+//        temp = rcv_data_len;
     }
 }
