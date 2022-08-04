@@ -233,7 +233,12 @@ void I2C_IRQHandling(I2C_Handle_t *pI2CHandle){
                             // last byte transmitted
                             I2C_GenerateStopCondition(i2c);
                         } else {
-                            //
+                            // still have data to transmit
+                            if ((i2c->S & (1 << I2C_S_RXAK)) >> I2C_S_RXAK) {
+
+                            } else {
+
+                            }
                         }
                     } else {
                         // receive mode
