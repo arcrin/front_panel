@@ -4,7 +4,7 @@
 #include "k32lb11.h"
 #include <cstring>
 
-
+uint32_t I2C_START_COUNT = 0;
 
 uint8_t I2C_GenerateStartCondition(I2C_RegDef_t *pI2C){
     if (pI2C->C1 & (1 << 5)){ // turn on MST bit only if it is 0
@@ -90,6 +90,28 @@ void I2C_Init(I2C_Handle_t *pI2CHandle){
     // Write to Control Register 1 to enable MST (master mode)
     // Write to Data Register with the address of the target slave
 }
+
+void I2C_InterruptControl(I2C_RegDef_t *pI2C, uint8_t  EnOrDi){
+    if (EnOrDi == ENABLE)
+        pI2C->C1 |= (1 << I2C_C1_IICIE);
+    else
+        pI2C->C1 &= ~(1 << I2C_C1_IICIE);
+}
+
+void I2C_StartStopDetectionControl(I2C_RegDef_t *pI2C, uint8_t EnOrDi){
+    if (EnOrDi == ENABLE)
+        pI2C->FLT |= (1 << I2C_FLT_SSIE);
+    else
+        pI2C->FLT &= ~(1 << I2C_FLT_SSIE);
+}
+
+void I2C_PeripheralControl(I2C_RegDef_t *pI2C, uint8_t EnOrDi){
+    if(EnOrDi == ENABLE)
+        pI2C->C1 |= (1 << I2C_C1_IICEN);
+    else
+        pI2C->C1 &= ~(1 << I2C_C1_IICEN);
+}
+
 
 uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint32_t FlagName, uint8_t SrNumber){
     if (SrNumber == 1){
@@ -177,6 +199,51 @@ void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
             *pRxBuffer = pI2CHandle->pI2Cx->D;
             while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TCF, 1));
             pRxBuffer++;
+        }
+    }
+}
+
+void I2C_IRQHandling(I2C_Handle_t *pI2CHandle){
+    I2C_RegDef_t *i2c = pI2CHandle->pI2Cx;
+    uint8_t interrupt_flag = (i2c->S & (1 << I2C_S_IICIF)) >> I2C_S_IICIF;
+    if(!interrupt_flag)
+        return;
+
+    //check STOPF flag in Glitch Filter Register
+    uint8_t stop_flag = (i2c->FLT & (1 << I2C_FLT_STOPF)) >> I2C_FLT_STOPF;
+    if(stop_flag){
+        i2c->S |= (1 << I2C_S_IICIF);
+        i2c->FLT |= (1 << I2C_FLT_STOPF);
+        I2C_START_COUNT = 0;
+        return;
+    } else {
+        //check STARTF flag in Glitch Filter Register
+        uint8_t start_flag = (i2c->FLT & (1 << I2C_FLT_STARTF)) >> I2C_FLT_STARTF;
+        if (start_flag) {
+            i2c->FLT |= (1 << I2C_FLT_STARTF);
+            i2c->S |= (1 << I2C_S_IICIF);
+            I2C_START_COUNT++;
+            if (I2C_START_COUNT == 1) {
+                //not a repeated start
+                if ((i2c->C1 & (1 << I2C_C1_MST)) >> I2C_C1_MST) {
+                    // master mode
+                    if ((i2c->C1 & (1 << I2C_C1_TX)) >> I2C_C1_TX) {
+                        // transmit mode
+                        if (pI2CHandle->TxLen == 0) {
+                            // last byte transmitted
+                            I2C_GenerateStopCondition(i2c);
+                        } else {
+                            //
+                        }
+                    } else {
+                        // receive mode
+                    }
+                }
+            } else {
+                // repeated start
+            }
+        } else{
+            // start condition not detected
         }
     }
 }

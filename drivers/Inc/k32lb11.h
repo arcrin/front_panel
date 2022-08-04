@@ -50,6 +50,9 @@ typedef struct {
     _vo uint32_t PORT_GPCHR;
 } PORT_RegDef_t, *pPORT_RegDef_t;
 
+void InterruptConfig(uint8_t IRQNumber, uint8_t ENorDI);
+void IRQPriorityConfig(uint8_t IRQNumber, uint32_t priority);
+
 /*****************************************************
  * System Integration Module Registers peripheral def
  *****************************************************/

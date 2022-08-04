@@ -20,10 +20,10 @@ typedef struct {
     uint8_t *pTxBuffer;
     uint8_t *pRxBuffer;
     uint32_t TxLen;
-    uint32_t RxLen;
+    uint32_t RxLen; // remaining data size to be received
     uint8_t TxRxState;
     uint8_t DevAddr;
-    uint32_t RxSize;
+    uint32_t RxSize; // total data size to be received
     uint8_t Sr;
 } I2C_Handle_t;
 
@@ -111,9 +111,17 @@ typedef struct {
  void I2C_PeripheralClockControl(I2C_RegDef_t *pI2C, uint8_t EnOrDi);
 
 /*
- * Init
+ * Configuration
  */
 void I2C_Init(I2C_Handle_t *pI2CHandle);
+
+void I2C_InterruptControl(I2C_RegDef_t *pI2C, uint8_t EnOrDi);
+
+void I2C_StartStopDetectionControl(I2C_RegDef_t *pI2C, uint8_t EnOrDi);
+
+void I2C_PeripheralControl(I2C_RegDef_t *pI2C, uint8_t EnOrDi);
+
+void I2C_IRQPriorityConfig(uint8_t IRQNumber, uint32_t priority);
 
 /*
  * set and receive data
@@ -150,5 +158,10 @@ void I2C_ClearStopConditionDetectionFlag(I2C_RegDef_t *pI2Cx);
 void I2C_ExecuteAddressPhaseWrite(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
 
 void I2C_ExecuteAddressPhaseRead(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
+
+/*
+ * IRQ
+ */
+void I2C_IRQHandling(I2C_Handle_t *pI2CHandle);
 
 #endif //FRONT_PANEL_I2C_DRIVER_H

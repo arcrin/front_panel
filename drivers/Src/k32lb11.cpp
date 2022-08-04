@@ -33,6 +33,21 @@ void delay(uint32_t delay_in_ms){
     while((get_tick() - start_tick) < wait);
 }
 
+void InterruptConfig(uint8_t IRQNumber, uint8_t ENorDI){
+    if (ENorDI == ENABLE) {
+        *NVIC_ISER |= 1 << IRQNumber;
+    } else if (ENorDI == DISABLE) {
+        *NVIC_ICER |= 1 << IRQNumber;
+    }
+}
+
+void IRQPriorityConfig(uint8_t IRQNumber, uint32_t priority){
+    uint32_t register_offset = IRQNumber / 4;
+    uint32_t byte_offset = IRQNumber % 4;
+    // addresses are incremented by 4 bytes
+    *(NVIC_IPR_BASEADDR + register_offset) |= (priority << (8 - NVIC_PRIORITY_BITS_IMPLEMENTED)) << (byte_offset * 8);
+}
+
 extern "C"{
     void SysTick_Handler(){
         sysTick_count++;

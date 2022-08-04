@@ -47,8 +47,8 @@ int main(){
 
 
 
-    PORT_IRQPriorityConfig(IRQ_NUMBER_PORTA, 3);
-    PORT_InterruptConfig(IRQ_NUMBER_PORTA, ENABLE);
+    IRQPriorityConfig(IRQ_NUMBER_PORTA, 3);
+    InterruptConfig(IRQ_NUMBER_PORTA, ENABLE);
 
     RESET_INTERRUPT();
     ENABLE_IRQ();

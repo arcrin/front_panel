@@ -96,8 +96,7 @@ int main(){
     I2C0_Init();
     SW1_Init();
     // Enable I2C module
-    i2c0_handle.pI2Cx->C1 |= 1 << I2C_C1_IICEN;
-//    i2c0_handle.pI2Cx->C1 |= 1 << I2C_C1_IICIE;
+    I2C_PeripheralControl(i2c0_handle.pI2Cx, ENABLE);
     ENABLE_IRQ();
 
     while(1) {
