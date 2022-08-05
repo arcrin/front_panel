@@ -203,52 +203,121 @@ void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
     }
 }
 
+uint8_t I2C_SlaveSendData(I2C_RegDef_t *pI2C, uint8_t data){
+    pI2C->D = data;
+}
+
+uint8_t I2C_SlaveReceiveData(I2C_RegDef_t *pI2C){
+    return (uint8_t) pI2C->D;
+}
+
 void I2C_IRQHandling(I2C_Handle_t *pI2CHandle){
-    I2C_RegDef_t *i2c = pI2CHandle->pI2Cx;
-    uint8_t interrupt_flag = (i2c->S & (1 << I2C_S_IICIF)) >> I2C_S_IICIF;
-    if(!interrupt_flag)
-        return;
+    uint8_t dummy_read;
+    I2C_RegDef_t *i2c_channel = pI2CHandle->pI2Cx;
+    /*Clear the I2C Interrupt Flag*/
+    i2c_channel->S |= (1 << I2C_S_IICIF);
+    /*Check if this device is in Master mode or Slave mode*/
+    if(i2c_channel->C1 & (1 << I2C_C1_MST)){
+        /* Master Mode - Check if this device is in Transmit or Receive Mode.*/
+        if(i2c_channel->C1 & (1 << I2C_C1_TX)){
+            // Master Transmit Mode - Check if the last byte was transmitted.
+            if ((pI2CHandle->TxLen == 0) && pI2CHandle->Mode != I2C_RX_MODE) {
+                // Last byte was transmitted - generate stop signal by changing to slave mode
 
-    //check STOPF flag in Glitch Filter Register
-    uint8_t stop_flag = (i2c->FLT & (1 << I2C_FLT_STOPF)) >> I2C_FLT_STOPF;
-    if(stop_flag){
-        i2c->S |= (1 << I2C_S_IICIF);
-        i2c->FLT |= (1 << I2C_FLT_STOPF);
-        I2C_START_COUNT = 0;
-        return;
-    } else {
-        //check STARTF flag in Glitch Filter Register
-        uint8_t start_flag = (i2c->FLT & (1 << I2C_FLT_STARTF)) >> I2C_FLT_STARTF;
-        if (start_flag) {
-            i2c->FLT |= (1 << I2C_FLT_STARTF);
-            i2c->S |= (1 << I2C_S_IICIF);
-            I2C_START_COUNT++;
-            if (I2C_START_COUNT == 1) {
-                //not a repeated start
-                if ((i2c->C1 & (1 << I2C_C1_MST)) >> I2C_C1_MST) {
-                    // master mode
-                    if ((i2c->C1 & (1 << I2C_C1_TX)) >> I2C_C1_TX) {
-                        // transmit mode
-                        if (pI2CHandle->TxLen == 0) {
-                            // last byte transmitted
-                            I2C_GenerateStopCondition(i2c);
-                        } else {
-                            // still have data to transmit
-                            if ((i2c->S & (1 << I2C_S_RXAK)) >> I2C_S_RXAK) {
-
-                            } else {
-
-                            }
-                        }
-                    } else {
-                        // receive mode
-                    }
+                // If TXRX mode (Repeated start), signal end of TX
+                if(pI2CHandle->Mode == I2C_TXRX_MODE){
+                    pI2CHandle->TxDone = true;
+                } else {
+                    // Issue STOP
+                    I2C_GenerateStopCondition(i2c_channel);
                 }
             } else {
-                // repeated start
+                // More bytes to be transmitted - Check if ACK received
+                if (i2c_channel->S & (1 << I2C_S_RXAK)) {
+                    // ACK not received - generate STOP
+                    I2C_GenerateStopCondition(i2c_channel);
+                } else {
+                    // Check if end of address cycle
+                    if (pI2CHandle->Mode == I2C_RX_MODE) {
+                        i2c_channel->C1 &= ~(1 << I2C_C1_TX);
+
+                        // there is only one byte to receive
+                        if (pI2CHandle->RxLen == 1) {
+                            i2c_channel->C1 |= (1 << I2C_C1_TXAK);
+                        }
+                        dummy_read = i2c_channel->D;
+                    }
+                    else{
+                        // Not end of address cycle - Write next byte to Data Register
+                        i2c_channel->D = *(pI2CHandle->pTxBuffer);
+                        pI2CHandle->pTxBuffer++;
+                        pI2CHandle->TxLen--;
+                    }
+                }
             }
-        } else{
-            // start condition not detected
+        } else {
+            // Master receive mode - check if this is the last byte to be read
+            if (pI2CHandle->RxLen == 1) {
+                // Last byte to be read - generate stop signal
+                I2C_GenerateStopCondition(i2c_channel);
+            } else {
+                // Not the last byte to be read - check if second to last byte
+                if (pI2CHandle->RxLen == 2) {
+                    /* Second to last byte to be read - Set Transmit Acknowledge Enable bit
+                     * so no ACK is sent after the next byte is received, which indicates
+                     * "end of data" to the slave
+                     */
+                    i2c_channel->C1 |= I2C_C1_TXAK;
+                }
+            }
+            *pI2CHandle->pRxBuffer = i2c_channel->D;
+            pI2CHandle->pRxBuffer++;
+            pI2CHandle->RxLen--;
+        }
+    } else {
+        // Slave mode - check if Arbitration Lost
+        if (i2c_channel->S & (1 << I2C_S_ARBL)) {
+            // Clear ARBL bit
+            i2c_channel->S &= ~(1 << I2C_S_ARBL);
+        }
+        else {
+            // Arbitration Not Lost - Check if data byte is this device's Slave Address byte
+            if (i2c_channel->S & (1 << I2C_S_IAAS)) {
+                // Slave address matched - Check slave Read/Write bit
+                if (i2c_channel->S & (1 << I2C_S_SRW)) {
+                    // Master was reading from slave - Set transmit mode
+                    i2c_channel->C1 |= (1 << I2C_C1_TX);
+                    I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_DATA_SEND);
+                }
+                else{
+                    // Master has specified Slave Receive Mode - Set Receive Mode
+
+                    // Clear IAAS
+                    i2c_channel->C1 &= ~(1 << I2C_C1_TX);
+
+                    // Read address data from data register and store it
+                    I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_DATA_RCV);
+                }
+            }
+            else{
+                // Data byte received is not Slave Address byte - Check if this device is in Transmit or Receive Mode
+                if (i2c_channel->C1 & (1 << I2C_C1_TX)) {
+                    // Transmit mode
+                    // Last byte received?
+                    if (i2c_channel->S & (1 << I2C_S_RXAK)) {
+                        i2c_channel->C1 &= ~(1 << I2C_C1_TX);
+                        dummy_read = i2c_channel->D;
+                    }
+                    else {
+                        // Write data to data register
+                        I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_DATA_SEND);
+                    }
+                }
+                else {
+                    // Receive Mode - Read data from data register and store it
+                    I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_DATA_RCV);
+                }
+            }
         }
     }
 }

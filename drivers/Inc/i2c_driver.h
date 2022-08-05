@@ -21,19 +21,21 @@ typedef struct {
     uint8_t *pRxBuffer;
     uint32_t TxLen;
     uint32_t RxLen; // remaining data size to be received
-    uint8_t TxRxState;
+    uint8_t Mode;
+    bool TxDone;
     uint8_t DevAddr;
     uint32_t RxSize; // total data size to be received
     uint8_t Sr;
+    bool DataPresent;
 } I2C_Handle_t;
 
 /*
  * I2C Application State
  */
 #define I2C_READY       0
-#define I2C_BUSY_IN_RX  1
-#define I2C_BUSY_IN_TX  2
-
+#define I2C_RX_MODE     1
+#define I2C_TX_MODE     2
+#define I2C_TXRX_MODE   3
 
 /*****************************************
  * Register bit definition
@@ -102,6 +104,14 @@ typedef struct {
 #define I2C_FLAG_EMPTY  (1 << I2C_S2_EMPTY)
 #define I2C_FLAG_ERROR  (1 << I2C_S2_ERROR)
 
+/********************************
+ * I2C application event macros
+ ********************************/
+#define I2C_EV_DATA_SEND        1
+#define I2C_EV_DATA_RCV         2
+
+
+
 /***************************
  * API
  ***************************/
@@ -130,9 +140,11 @@ void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t L
 
 void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t stop_condition, bool initial_start_condition);
 
-void I2C_SlaveSendData();
+void I2C_MasterIT(I2C_Handle_t *pI2CHandle);
 
-void I2C_SlaveReceiveData();
+uint8_t I2C_SlaveSendData(I2C_RegDef_t *pI2C, uint8_t data);
+
+uint8_t I2C_SlaveReceiveData(I2C_RegDef_t* pI2C);
 
 /*
  * read status
@@ -160,8 +172,10 @@ void I2C_ExecuteAddressPhaseWrite(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
 void I2C_ExecuteAddressPhaseRead(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
 
 /*
- * IRQ
+ * Interrupt related
  */
 void I2C_IRQHandling(I2C_Handle_t *pI2CHandle);
+
+void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t app_event);
 
 #endif //FRONT_PANEL_I2C_DRIVER_H
