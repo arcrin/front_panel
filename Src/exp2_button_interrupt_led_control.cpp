@@ -62,7 +62,7 @@ extern "C"{
         delay();
         PORT_IRQHandling(sw1_port_handle.pPORT, 4);
 //        GPIO_PinToggle(green_led_gpio_handle.pGPIOx, 5);
-        if (GPIO_ReadFromPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber)) {
+        if (GPIO_ReadFromInputPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber)) {
             GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx, 5, HIGH);
         } else {
             GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx, 5, LOW);

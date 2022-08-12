@@ -18,7 +18,25 @@ set(PROJECT_FILES
         drivers/Src/spi_driver.cpp
         drivers/Inc/i2c_driver.h
         drivers/Src/i2c_driver.cpp
-        Src/exp8_i2c_master_rx_it.cpp
+        drivers/Inc/adc_driver.h
+        drivers/Src/adc_driver.cpp
+        drivers/Inc/uart_driver.h
+        drivers/Src/uart_driver.cpp
+        modules/fonts/fonts.h
+        modules/fonts/font8.cpp
+        modules/fonts/font12.cpp
+        modules/fonts/font16.cpp
+        modules/fonts/font20.cpp
+        modules/fonts/font24.cpp
+        modules/GUI_Paint.h
+        modules/GUI_Paint.cpp
+        modules/ImageData.h
+        modules/ImageData.cpp
+#        modules/epaper.h
+#        modules/epaper.cpp
+        modules/epaper_front_panel.h
+        modules/epaper_front_panel.cpp
+        Src/exp9_adc_test.cpp
         startup.c
         )
 
@@ -28,7 +46,10 @@ add_executable(${EXECUTABLE} ${PROJECT_FILES})
 
 
 target_include_directories(${EXECUTABLE} PRIVATE
-        drivers/Inc)
+        drivers/Inc
+        drivers/Src
+        modules
+        modules/fonts)
 
 set(MACH cortex-m0plus)
 

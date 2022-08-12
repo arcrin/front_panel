@@ -29,7 +29,7 @@ void GPIO_WriteOutputPin(pGPIO_RegDef_t pGPIOx, uint8_t PinNumber,uint8_t state)
     }
 }
 
-uint8_t GPIO_ReadFromPin(pGPIO_RegDef_t pGPIOx, uint8_t PinNumber){
+uint8_t GPIO_ReadFromInputPin(pGPIO_RegDef_t pGPIOx, uint8_t PinNumber){
     uint8_t value;
     value = (pGPIOx->PDIR & (1 << PinNumber)) >> PinNumber;
     return value;

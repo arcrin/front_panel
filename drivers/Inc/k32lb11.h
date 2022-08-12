@@ -185,16 +185,79 @@ typedef struct {
     _vo uint8_t SLTH;
     _vo uint8_t SLTL;
     _vo uint8_t S2;
-} I2C_RegDef_t;
+} I2C_RegDef_t, *pI2C_RegDef_t;
 
-#define I2C0    ((I2C_RegDef_t*) I2C0_BASEADDR)
-#define I2C1    ((I2C_RegDef_t*) I2C1_BASEADDR)
+#define I2C0    ((pI2C_RegDef_t) I2C0_BASEADDR)
+#define I2C1    ((pI2C_RegDef_t) I2C1_BASEADDR)
 
 #define I2C0_CLOCK_EN() SIM->SIM_SCGC4 |= (1 << 6)
 #define I2C1_CLOCK_EN() SIM->SIM_SCGC4 |= (1 << 7)
 
 #define I2C0_CLOCK_DI() SIM->SIM_SCGC4 &= ~(1 << 6)
 #define I2C1_CLOCK_DI() SIM->SIM_SCGC4 &= ~(1 << 7)
+
+/*******************************************
+ * ADC peripheral def
+ *******************************************/
+#define ADC0_BASEADDR   0x4003B000
+
+typedef struct {
+    _vo uint32_t SC1A;
+    _vo uint32_t SC1B;
+    _vo uint32_t CFG1;
+    _vo uint32_t CFG2;
+    _vo uint32_t RA;
+    _vo uint32_t RB;
+    _vo uint32_t CV1;
+    _vo uint32_t CV2;
+    _vo uint32_t SC2;
+    _vo uint32_t SC3;
+    _vo uint32_t OFS;
+    _vo uint32_t PG;
+    _vo uint32_t MG;
+    _vo uint32_t CLPD;
+    _vo uint32_t CLPS;
+    _vo uint32_t CLP4;
+    _vo uint32_t CLP3;
+    _vo uint32_t CLP2;
+    _vo uint32_t CLP1;
+    _vo uint32_t CLP0;
+    _vo uint32_t CLMD;
+    _vo uint32_t CLMS;
+    _vo uint32_t CLM4;
+    _vo uint32_t CLM3;
+    _vo uint32_t CLM2;
+    _vo uint32_t CLM1;
+    _vo uint32_t CLM0;
+}ADC_RegDef_t, *pADC_RegDef_t;
+
+#define ADC0                ((pADC_RegDef_t) ADC0_BASEADDR)
+#define ADC0_CLOCK_EN()     SIM->SIM_SCGC6 |= (1 << 27)
+#define ADC0_CLOCK_DI()     SIM->SIM_SCGC6 &= ~(1 << 27)
+
+
+
+/***********************************************
+ * UART peripheral def
+ ***********************************************/
+#define UART2_BASEADDR      0x4006C001
+typedef struct {
+    _vo uint8_t BDH;
+    _vo uint8_t BDL;
+    _vo uint8_t C1;
+    _vo uint8_t C2;
+    _vo uint8_t S1;
+    _vo uint8_t S2;
+    _vo uint8_t C3;
+    _vo uint8_t D;
+    _vo uint8_t MA1;
+    _vo uint8_t MA2;
+    _vo uint8_t C4;
+    _vo uint8_t C5;
+}UART2_RegDef_t, *pUART2_RegDef_t;
+
+#define UART2   ((pUART2_RegDef_t) UART2_BASEADDR)
+
 
 
 /******************************************
@@ -285,6 +348,8 @@ void delay(uint32_t delay_in_ms);
 #define RESET       0x0
 #define FLAG_SET    SET
 #define FLAG_RESET  RESET
+#define GPIO_PIN_SET    SET
+#define GPIO_PIN_RESET  RESET
 
 #define DISABLE_IRQ()       do{asm volatile("cpsid i");} while(0)
 #define ENABLE_IRQ()        do{asm volatile("cpsie i");} while(0)
@@ -296,3 +361,4 @@ void delay(uint32_t delay_in_ms);
 #include "port_driver.h"
 #include "spi_driver.h"
 #include "i2c_driver.h"
+#include "adc_driver.h"

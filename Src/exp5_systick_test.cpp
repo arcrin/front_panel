@@ -9,6 +9,7 @@ GPIO_Handle_t green_led_gpio_handle;
 
 int main(){
     DISABLE_IRQ();
+    MCG_Init();
 
     // LED1 (green) set up
     green_led_port_handle.pPORT = PORTD;
@@ -24,7 +25,7 @@ int main(){
     green_led_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_OUTPUT;
     GPIO_Init(&green_led_gpio_handle);
 
-    SysTick_Init(800); // each tick is 0.1 ms
+    SysTick_Init(8000); // 1 ms delay function
 
     ENABLE_IRQ();
 

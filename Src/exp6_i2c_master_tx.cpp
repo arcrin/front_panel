@@ -94,7 +94,7 @@ int main(){
 
     while(1) {
 
-        while (GPIO_ReadFromPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber));
+        while (GPIO_ReadFromInputPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber));
         delay(1000); // 100 ms delay
         I2C_MasterSendData(&i2c0_handle, sample_data, strlen((char *) sample_data), slave_address, true, true);
     }

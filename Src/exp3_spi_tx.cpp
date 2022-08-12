@@ -84,8 +84,8 @@ void GPIO_Button_Init(){
     sw1_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_INPUT;
     GPIO_Init(&sw1_gpio_handle);
 
-    PORT_IRQPriorityConfig(IRQ_NUMBER_PORTA, 3);
-    PORT_InterruptConfig(IRQ_NUMBER_PORTA, ENABLE);
+    IRQPriorityConfig(IRQ_NUMBER_PORTA, 3);
+    InterruptConfig(IRQ_NUMBER_PORTA, ENABLE);
 }
 
 void GPIO_Green_LED_Init() {
@@ -124,7 +124,7 @@ extern "C"{
     void PortA_PinDetect_Handler(){
         delay();
         PORT_IRQHandling(sw1_port_handle.pPORT, 4);
-        if (GPIO_ReadFromPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber)) {
+        if (GPIO_ReadFromInputPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber)) {
             GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx, 5, HIGH);
         } else {
             GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx, 5, LOW);

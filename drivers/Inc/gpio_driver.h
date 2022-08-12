@@ -33,7 +33,7 @@ void GPIO_Init(GPIO_Handle_t* pGPIOHandle);
  */
 void GPIO_PinToggle(pGPIO_RegDef_t pGPIOx, uint8_t PinNumber);
 void GPIO_WriteOutputPin(pGPIO_RegDef_t pGPIOx, uint8_t PinNumber, uint8_t state);
-uint8_t GPIO_ReadFromPin(pGPIO_RegDef_t pGPIOx, uint8_t PinNumber);
+uint8_t GPIO_ReadFromInputPin(pGPIO_RegDef_t pGPIOx, uint8_t PinNumber);
 
 
 

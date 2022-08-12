@@ -73,14 +73,14 @@ int main(){
 
 
     while(1){
-        if(GPIO_ReadFromPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber) == 0){
+        if(GPIO_ReadFromInputPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber) == 0){
 //            GPIO_WriteOutputPin(red_led_gpio_handle.pGPIOx,
 //                                red_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
 //                                LOW);
             GPIO_PinToggle(green_led_gpio_handle.pGPIOx, green_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
             delay();
         }
-        else if (GPIO_ReadFromPin(sw3_gpio_handle.pGPIOx, sw3_gpio_handle.GPIO_Config.GPIO_PinNumber) == 0){
+        else if (GPIO_ReadFromInputPin(sw3_gpio_handle.pGPIOx, sw3_gpio_handle.GPIO_Config.GPIO_PinNumber) == 0){
 //            GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx,
 //                                green_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
 //                                LOW);
