@@ -36,7 +36,7 @@ set(PROJECT_FILES
 #        modules/epaper.cpp
         modules/epaper_front_panel.h
         modules/epaper_front_panel.cpp
-        Src/exp9_adc_test.cpp
+        Src/exp12_uart_tx.cpp
         startup.c
         )
 

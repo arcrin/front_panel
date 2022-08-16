@@ -240,7 +240,7 @@ typedef struct {
 /***********************************************
  * UART peripheral def
  ***********************************************/
-#define UART2_BASEADDR      0x4006C001
+#define UART2_BASEADDR      0x4006C000
 typedef struct {
     _vo uint8_t BDH;
     _vo uint8_t BDL;
@@ -254,10 +254,12 @@ typedef struct {
     _vo uint8_t MA2;
     _vo uint8_t C4;
     _vo uint8_t C5;
-}UART2_RegDef_t, *pUART2_RegDef_t;
+}UART_RegDef_t, *pUART_RegDef_t;
 
-#define UART2   ((pUART2_RegDef_t) UART2_BASEADDR)
+#define UART2   ((pUART_RegDef_t) UART2_BASEADDR)
 
+#define UART2_CLOCK_EN()    SIM->SIM_SCGC4 |= (1 << 12)
+#define UART2_CLOCK_DI()    SIM->SIM_SCGC4 &= ~(1 << 12)
 
 
 /******************************************
@@ -362,3 +364,4 @@ void delay(uint32_t delay_in_ms);
 #include "spi_driver.h"
 #include "i2c_driver.h"
 #include "adc_driver.h"
+#include "uart_driver.h"

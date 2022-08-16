@@ -24,7 +24,7 @@
 #define C2_TCIE         6   // Transmission Complete Interupt Enable
 #define C2_RIE          5   // Receiver Full Interrupt Enable
 #define C2_ILIE         4   // Idle Line Interrupt Enable
-#define C2_TIE          3   // Transmitter Enable
+#define C2_TE          3   // Transmitter Enable
 #define C2_RE           2   // Receiver Enable
 #define C2_RWU          1   // Receiver Wakeup Control
 #define C2_SBK          0   // Send Break
@@ -77,5 +77,51 @@
 #define C5_TDMAS        7   // Transmitter DMA select
 #define C5_RDMAS        5   // Receiver Full DMA Select
 
+typedef struct {
+    _vo uint8_t UART_Mode;
+    _vo uint8_t UART_Baud;
+    _vo uint8_t UART_WordLength;
+    _vo uint8_t UART_ParityControl;
+//    _vo uint8_t UART_NumOfStopBits;
+//    _vo uint8_t UART_HWFlowControl;
+} UART_Config_t;
+
+typedef struct {
+    pUART_RegDef_t pUARTx;
+    UART_Config_t UART_Config;
+    uint8_t *pTxBuffer;
+    uint8_t *pRxBuffer;
+    uint32_t TxLen;
+    uint32_t RxLen;
+    uint8_t TxBusyState;
+    uint8_t RxBusyState;
+} UART_Handle_t, *pUART_Handle_t;
+
+#define UART_TX_ONLY_MODE       1
+#define UART_RX_ONLY_MODE       2
+#define UART_TXRX_MODE          3
+
+#define UART_WORDLEN_8BITS      0
+#define UART_WORDLEN_9BITS      1
+
+#define UART_PARITY_EN_ODD      2
+#define UART_PARITY_EN_EVEN     1
+#define UART_PARITY_DISABLE     0
+
+
+/***********************************
+ * API
+ ***********************************/
+void UART_Init(pUART_Handle_t pUARTHandle);
+
+void UART_SendData(pUART_Handle_t pUARTHandle, uint8_t *pTxBuffer, uint32_t Len);
+
+void UART_ReceiveData(pUART_Handle_t pUARTHAndle, uint8_t *pRxBuffer, uint32_t Len);
+
+uint8_t UART_SendDataIT(pUART_Handle_t pUARTHandle, uint8_t *pTxBuffer, uint32_t Len);
+
+uint8_t UART_ReceiveDataIT(pUART_Handle_t pUARTHandle, uint8_t *pRxBuffer, uint32_t Len);
+
+void UART_SetBaudRate(pUART_Handle_t *pUartHandle, uint32_t BaudRate);
 
 #endif //FRONT_PANEL_UART_DRIVER_H
