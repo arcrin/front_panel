@@ -79,7 +79,7 @@
 
 typedef struct {
     _vo uint8_t UART_Mode;
-    _vo uint8_t UART_Baud;
+    _vo uint32_t UART_Baud;
     _vo uint8_t UART_WordLength;
     _vo uint8_t UART_ParityControl;
 //    _vo uint8_t UART_NumOfStopBits;
@@ -95,6 +95,7 @@ typedef struct {
     uint32_t RxLen;
     uint8_t TxBusyState;
     uint8_t RxBusyState;
+    uint8_t ByteReceived;
 } UART_Handle_t, *pUART_Handle_t;
 
 #define UART_TX_ONLY_MODE       1
@@ -109,6 +110,23 @@ typedef struct {
 #define UART_PARITY_DISABLE     0
 
 
+/**************************************
+ * Flags
+ **************************************/
+#define TDRE_FLAG       (1 << S1_TDRE)
+#define TC_FLAG         (1 << S1_TC)
+#define RDRF_FLAG       (1 << S1_RDRF)
+#define IDLE_FLAG       (1 << S1_IDLE)
+#define OR_FLAG         (1 << S1_OR)
+#define NF_FLAG         (1 << S1_NF)
+#define FE_FLAG         (1 << S1_FE)
+#define PF_FLAG         (1 << S1_PF)
+
+/*************************************
+ * Application Event
+ *************************************/
+#define UART_BYTE_RCV_EVENT     0
+
 /***********************************
  * API
  ***********************************/
@@ -120,8 +138,15 @@ void UART_ReceiveData(pUART_Handle_t pUARTHAndle, uint8_t *pRxBuffer, uint32_t L
 
 uint8_t UART_SendDataIT(pUART_Handle_t pUARTHandle, uint8_t *pTxBuffer, uint32_t Len);
 
+void UART_SendByte(pUART_Handle_t pUARTHandle, uint8_t byte_to_send);
+
 uint8_t UART_ReceiveDataIT(pUART_Handle_t pUARTHandle, uint8_t *pRxBuffer, uint32_t Len);
 
 void UART_SetBaudRate(pUART_Handle_t *pUartHandle, uint32_t BaudRate);
 
+void UART_InterruptControl(pUART_RegDef_t pUARTx, uint8_t EnOrDi);
+
+void UART_IRQHandling(pUART_Handle_t pUARTHandle);
+
+void UART_ApplicationEventCallback(pUART_Handle_t pUARTHandle, uint8_t app_event);
 #endif //FRONT_PANEL_UART_DRIVER_H

@@ -6,6 +6,7 @@
 #define FRONT_PANEL_K32LB3X_H
 
 #include <cstdint>
+#include <cstring>
 
 #define _vo     volatile
 
