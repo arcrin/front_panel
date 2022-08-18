@@ -6,6 +6,7 @@
 GPIO_Handle_t sw1_gpio_handle;
 UART_Handle_t uart_handle;
 
+char msg[64] = "UART Tx testing...\n\r";
 char display_buffer[15] = "Front Panel->";
 char empty_buffer[256] = "                                                   ";
 char wrong_cmd_buffer[19] = "\ncmd not supported";
@@ -39,9 +40,9 @@ void UART2_Init(){
     uart_handle.RxLen = 0;
     uart_handle.TxLen = 0;
     UART_Init(&uart_handle);
-    uart_handle.pUARTx->C2 |= (1 << C2_RIE);
-    uart_handle.pUARTx->C2 &= ~(1 << C2_TIE);
-    uart_handle.pUARTx->C2 &= ~(1 << C2_TCIE);
+//    uart_handle.pUARTx->C2 |= (1 << UART_C2_RIE);
+//    uart_handle.pUARTx->C2 &= ~(1 << UART_C2_TIE);
+//    uart_handle.pUARTx->C2 &= ~(1 << UART_C2_TCIE);
 }
 
 void SW1_Init(){
@@ -106,12 +107,12 @@ int main(){
     InterruptConfig(IRQ_NUMBER_UART2_FLEXIO, ENABLE);
     RESET_INTERRUPT();
     ENABLE_IRQ();
-//    while(1){
-//        while(GPIO_ReadFromInputPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber));
-//        delay(50);
-//        UART_SendData(&uart_handle, (uint8_t*) msg, strlen(msg));
-//    }
-    while(1);
+    while(1){
+        while(GPIO_ReadFromInputPin(sw1_gpio_handle.pGPIOx, sw1_gpio_handle.GPIO_Config.GPIO_PinNumber));
+        delay(50);
+        UART_SendData(&uart_handle, (uint8_t*) msg, strlen(msg));
+    }
+//    while(1);
 }
 
 extern "C"{

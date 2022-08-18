@@ -22,6 +22,10 @@ set(PROJECT_FILES
         drivers/Src/adc_driver.cpp
         drivers/Inc/uart_driver.h
         drivers/Src/uart_driver.cpp
+        drivers/Inc/lpuart_driver.h
+        drivers/Src/lpuart_driver.cpp
+        drivers/Inc/front_panel_peripheral.h
+        drivers/Src/front_panel_peripheral.cpp
         modules/fonts/fonts.h
         modules/fonts/font8.cpp
         modules/fonts/font12.cpp
@@ -32,11 +36,9 @@ set(PROJECT_FILES
         modules/GUI_Paint.cpp
         modules/ImageData.h
         modules/ImageData.cpp
-#        modules/epaper.h
-#        modules/epaper.cpp
         modules/epaper_front_panel.h
         modules/epaper_front_panel.cpp
-        Src/exp12_uart_tx.cpp
+        Src/exp13_lpuart.cpp
         startup.c
         )
 

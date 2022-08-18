@@ -1,0 +1,11 @@
+//
+// Created by andy- on 2022-08-17.
+//
+
+#ifndef FRONT_PANEL_FRONT_PANEL_PERIPHERAL_H
+#define FRONT_PANEL_FRONT_PANEL_PERIPHERAL_H
+
+#include "k32lb11.h"
+
+
+#endif //FRONT_PANEL_FRONT_PANEL_PERIPHERAL_H

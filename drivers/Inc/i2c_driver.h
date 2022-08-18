@@ -142,7 +142,7 @@ void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
 
 void I2C_MasterIT(I2C_Handle_t *pI2CHandle);
 
-uint8_t I2C_SlaveSendData(I2C_RegDef_t *pI2C, uint8_t data);
+void I2C_SlaveSendData(I2C_RegDef_t *pI2C, uint8_t data);
 
 uint8_t I2C_SlaveReceiveData(I2C_RegDef_t* pI2C);
 

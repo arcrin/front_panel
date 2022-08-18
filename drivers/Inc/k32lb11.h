@@ -262,6 +262,28 @@ typedef struct {
 #define UART2_CLOCK_EN()    SIM->SIM_SCGC4 |= (1 << 12)
 #define UART2_CLOCK_DI()    SIM->SIM_SCGC4 &= ~(1 << 12)
 
+/******************************************
+ * LPUART peripheral def
+ ******************************************/
+#define LPUART0_BASEADDR        0x40054000
+#define LPUART1_BASEADDR        0x40055000
+
+typedef struct {
+    _vo uint32_t BAUD;
+    _vo uint32_t STAT;
+    _vo uint32_t CTRL;
+    _vo uint32_t DATA;
+} LPUART_RegDef_t, *pLPUART_RegDef_t;
+
+#define LPUART0     ((pLPUART_RegDef_t) LPUART0_BASEADDR)
+#define LPUART1     ((pLPUART_RegDef_t) LPUART1_BASEADDR)
+
+#define LPUART0_CLOCK_EN()      SIM->SIM_SCGC5 |= (1 << 20)
+#define LPUART1_CLOCK_EN()      SIM->SIM_SCGC5 |= (1 << 21)
+
+#define LPUART0_CLOCK_DI()      SIM->SIM_SCGC5 &= ~(1 << 20)
+#define LPUART1_CLOCK_DI()      SIM->SIM_SCGC5 &= ~(1 << 21)
+
 
 /******************************************
  * MCG peripheral def
@@ -366,3 +388,4 @@ void delay(uint32_t delay_in_ms);
 #include "i2c_driver.h"
 #include "adc_driver.h"
 #include "uart_driver.h"
+#include "lpuart_driver.h"
