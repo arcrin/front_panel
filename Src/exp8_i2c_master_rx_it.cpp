@@ -12,6 +12,7 @@ uint8_t commandCode;
 //uint8_t tx_buffer[] = {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,};
 
 uint8_t tx_buffer[] = "HiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHi...123A";
+//uint8_t tx_buffer[] = "I2C test...123A";
 
 uint32_t data_len = 0;
 
@@ -24,11 +25,11 @@ void I2C0_Port_Pin_Init(){
     i2c0_port_handle.PORT_Config.PORT_Pin_Pull_Select = PULL_UP;
 
     // SCL
-    i2c0_port_handle.PORT_Config.PORT_Pin_Number = 0;
+    i2c0_port_handle.PORT_Config.PORT_Pin_Number = 2;
     PORT_Init(&i2c0_port_handle);
 
     // SDA
-    i2c0_port_handle.PORT_Config.PORT_Pin_Number = 1;
+    i2c0_port_handle.PORT_Config.PORT_Pin_Number = 3;
     PORT_Init(&i2c0_port_handle);
 }
 

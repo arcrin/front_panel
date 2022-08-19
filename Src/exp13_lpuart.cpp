@@ -17,22 +17,22 @@ LPUART_Handle_t lpuart_handle;
 void LPUART_Port_Init(){
     PORT_Handle_t lpuart_port_handle;
     lpuart_port_handle.pPORT = PORTE;
-    lpuart_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION4;
+    lpuart_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION3;
     lpuart_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
     lpuart_port_handle.PORT_Config.PORT_Pin_Pull_Enable = ENABLE;
     lpuart_port_handle.PORT_Config.PORT_Pin_Pull_Select = PULL_UP;
 
     // Tx
-    lpuart_port_handle.PORT_Config.PORT_Pin_Number = 20;
+    lpuart_port_handle.PORT_Config.PORT_Pin_Number = 0;
     PORT_Init(&lpuart_port_handle);
 
     // Rx
-    lpuart_port_handle.PORT_Config.PORT_Pin_Number = 21;
+    lpuart_port_handle.PORT_Config.PORT_Pin_Number = 1;
     PORT_Init(&lpuart_port_handle);
 }
 
-void LPUART0_Init(){
-    lpuart_handle.pLPUARTx = LPUART0;
+void LPUART1_Init(){
+    lpuart_handle.pLPUARTx = LPUART1;
     lpuart_handle.LPUART_Config.LPUART_Mode = LPUART_TXRX_MODE;
     lpuart_handle.LPUART_Config.LPUART_WordLength = LPUART_WORDLEN_8BITS;
     lpuart_handle.LPUART_Config.LPUART_ParityControl = LPUART_PARITY_DISABLE;
@@ -101,10 +101,10 @@ int main(){
     SysTick_Init(8000);
     SIM->SIM_CLKDIV1 &= ~(0x7 << 16);
     LPUART_Port_Init();
-    LPUART0_Init();
+    LPUART1_Init();
     SW1_Init();
-    IRQPriorityConfig(IRQ_NUMBER_LPUART0, 3);
-    InterruptConfig(IRQ_NUMBER_LPUART0, ENABLE);
+    IRQPriorityConfig(IRQ_NUMBER_LPUART1, 3);
+    InterruptConfig(IRQ_NUMBER_LPUART1, ENABLE);
     RESET_INTERRUPT();
     ENABLE_IRQ();
 //    while(1){
@@ -116,7 +116,7 @@ int main(){
 }
 
 extern "C"{
-    void LPUART0_Handler(){
+    void LPUART1_Handler(){
         LPUART_IRQHandling(&lpuart_handle);
     }
 }

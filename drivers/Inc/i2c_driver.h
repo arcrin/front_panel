@@ -176,6 +176,6 @@ void I2C_ExecuteAddressPhaseRead(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
  */
 void I2C_IRQHandling(I2C_Handle_t *pI2CHandle);
 
-void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t app_event);
+void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t app_event)__attribute__((weak));
 
 #endif //FRONT_PANEL_I2C_DRIVER_H

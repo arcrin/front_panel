@@ -321,5 +321,3 @@ void I2C_IRQHandling(I2C_Handle_t *pI2CHandle){
         }
     }
 }
-
-void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t i2c_event){}

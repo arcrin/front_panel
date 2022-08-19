@@ -15,7 +15,12 @@ void LPUART_Init(pLPUART_Handle_t pLPUARTHandle){
         LPUART1_CLOCK_EN();
     }
 
-    SIM->SIM_SOPT2 |= (0x3 << 26); // Need to manually enable the clock for LPUART module
+    if (pLPUARTHandle->pLPUARTx == LPUART0) {
+        SIM->SIM_SOPT2 |= (0x3 << 26); // Need to manually enable the clock for LPUART module
+    } else if (pLPUARTHandle->pLPUARTx == LPUART1) {
+        SIM->SIM_SOPT2 |= (0x3 << 28); // Need to manually enable the clock for LPUART module
+    }
+
 
     // Configure the word length
     pLPUARTHandle->pLPUARTx->CTRL |= (pLPUARTHandle->LPUART_Config.LPUART_WordLength << LPUART_CTRL_M);

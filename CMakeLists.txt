@@ -38,7 +38,7 @@ set(PROJECT_FILES
         modules/ImageData.cpp
         modules/epaper_front_panel.h
         modules/epaper_front_panel.cpp
-        Src/exp13_lpuart.cpp
+        Src/exp8_i2c_master_rx_it.cpp
         startup.c
         )
 
