@@ -99,7 +99,7 @@ int main(){
     DISABLE_IRQ();
     MCG_Init();
     SysTick_Init(8000);
-    SIM->SIM_CLKDIV1 &= ~(0x7 << 16);
+//    SIM->SIM_CLKDIV1 &= ~(0x7 << 16);
     LPUART_Port_Init();
     LPUART1_Init();
     SW1_Init();

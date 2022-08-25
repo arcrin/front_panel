@@ -47,7 +47,7 @@ void TestADCInit(){
     // SC1A
     adc_handle.InterruptControlA = AIEN_OFF;
     adc_handle.DifferentialModeA = DIFF_SINGLE;
-    adc_handle.InputChannelA = 0x1F;
+    adc_handle.InputChannelA = AD4;
 
     // SC1B
     adc_handle.InterruptControlB = AIEN_OFF;
@@ -58,7 +58,7 @@ void TestADCInit(){
 }
 
 int main(){
-    uint16_t dummy_read;
+    uint16_t adc_read;
     uint32_t tempreg;
     DISABLE_IRQ();
     green_led_port_handle.pPORT = PORTD;
@@ -82,13 +82,8 @@ int main(){
     ENABLE_IRQ();
     while(1){
         delay(1000);
-        tempreg = adc_handle.pADCx->SC1A;
-        tempreg &= ~(0x1F);
-        adc_handle.pADCx->SC1A = tempreg;
-        adc_handle.pADCx->SC1A = (tempreg | AD4);
-        while (!(adc_handle.pADCx->SC1A & (1 << 7)));
-        dummy_read = adc_handle.pADCx->RA & 0xFFFF;
-        if (dummy_read > 0xFFF0) {
+        adc_read = ADC_Read(&adc_handle, CHANNEL_A);
+        if (adc_read > 0xFFF0) {
             GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx, 5, HIGH);
         } else{
             GPIO_WriteOutputPin(green_led_gpio_handle.pGPIOx, 5, LOW);

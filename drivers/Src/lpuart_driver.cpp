@@ -8,7 +8,6 @@ void LPUART_SetBaudRate(pLPUART_Handle_t pLPUARTHandle, uint32_t BaudRate){
 }
 
 void LPUART_Init(pLPUART_Handle_t pLPUARTHandle){
-    uint32_t PCLK = 8000000;
     if (pLPUARTHandle->pLPUARTx == LPUART0) {
         LPUART0_CLOCK_EN();
     } else if (pLPUARTHandle->pLPUARTx == LPUART1) {
@@ -16,9 +15,9 @@ void LPUART_Init(pLPUART_Handle_t pLPUARTHandle){
     }
 
     if (pLPUARTHandle->pLPUARTx == LPUART0) {
-        SIM->SIM_SOPT2 |= (0x3 << 26); // Need to manually enable the clock for LPUART module
+        SIM->SIM_SOPT2 |= (0x1 << 26); // Need to manually enable the clock for LPUART module
     } else if (pLPUARTHandle->pLPUARTx == LPUART1) {
-        SIM->SIM_SOPT2 |= (0x3 << 28); // Need to manually enable the clock for LPUART module
+        SIM->SIM_SOPT2 |= (0x1 << 28); // Need to manually enable the clock for LPUART module
     }
 
 
@@ -45,14 +44,15 @@ void LPUART_Init(pLPUART_Handle_t pLPUARTHandle){
      * Not sure if there is a better way to do this,
      * but I couldn't find any formula
      ******************************************************/
-    pLPUARTHandle->pLPUARTx->BAUD |= ((0x4 & 0x1FFF) << 0);
+    pLPUARTHandle->pLPUARTx->BAUD |= ((0xD & 0x1FFF) << 0);
 
     // Configure OSR - Oversampling ratio
-    pLPUARTHandle->pLPUARTx->BAUD |= (1 << 28);
-    pLPUARTHandle->pLPUARTx->BAUD &= ~(1 << 27);
-    pLPUARTHandle->pLPUARTx->BAUD &= ~(1 << 26);
-    pLPUARTHandle->pLPUARTx->BAUD &= ~(1 << 25);
-    pLPUARTHandle->pLPUARTx->BAUD &= ~(1 << 24);
+    pLPUARTHandle->pLPUARTx->BAUD |= (0x1F << 24);
+//    pLPUARTHandle->pLPUARTx->BAUD |= (1 << 28);
+//    pLPUARTHandle->pLPUARTx->BAUD &= ~(1 << 27);
+//    pLPUARTHandle->pLPUARTx->BAUD &= ~(1 << 26);
+//    pLPUARTHandle->pLPUARTx->BAUD &= ~(1 << 25);
+//    pLPUARTHandle->pLPUARTx->BAUD &= ~(1 << 24);
 
 
     pLPUARTHandle->pLPUARTx->BAUD &= ~(1 <<LPUART_BAUD_M10);
@@ -82,7 +82,7 @@ void LPUART_SendByte(pLPUART_Handle_t pLPUARTHandle, uint8_t byte_to_send){
 }
 
 void LPUART_IRQHandling(pLPUART_Handle_t pLPUARTHandle){
-    uint32_t temp_stat_reading, temp2;
+    uint32_t temp_stat_reading;
     temp_stat_reading = pLPUARTHandle->pLPUARTx->STAT;
 //    temp2 = ((pLPUARTHandle->pLPUARTx->CTRL & (1 << LPUART_CTRL_RIE)) >> LPUART_CTRL_RIE);
 

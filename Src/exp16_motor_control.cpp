@@ -1,5 +1,5 @@
 //
-// Created by andy- on 2022-08-17.
+// Created by wbai on 8/23/2022.
 //
 #include "front_panel_peripheral.h"
 
@@ -20,8 +20,6 @@ extern GPIO_Handle_t test_status_led_gpio_handle;
 
 extern LPUART_Handle_t lpuart_handle;
 
-extern ADC_Handle_t act1_feedback_adc_handle;
-
 uint8_t TEST_LED_COLOR = COLOR_OFF;
 uint8_t JIG_LED_COLOR = COLOR_OFF;
 
@@ -32,38 +30,37 @@ int main(){
     MCG_Init();
     MCG->MC |= (1 << 7);
     SysTick_Init(480);
-    FRONT_PANEL_START_RELEASE_BUTTON_INIT();
-    FRONT_PANEL_RESEAT_BUTTON_INIT();
-    FRONT_PANEL_ACT1_CONTROL_INIT();
-    FRONT_PANEL_TEST_STATUS_LED_INIT();
-    FRONT_PANEL_LPUART_INIT();
-    FRONT_PANEL_ADC0_INIT();
+    START_RELEASE_BUTTON_INIT();
+    RESEAT_BUTTON_INIT();
+    ACT1_CONTROL_INIT();
+    TEST_STATUS_LED_INIT();
+    LPUART_INIT();
     ENABLE_IRQ();
     while (1);
 }
 
 extern "C"{
-void PortCD_SingleInterrupt_Handler(){
-    if (PORTC->PORT_PCR[4] & (1 << 24)) {
-        PORT_IRQHandling(PORTC, 4);
-        GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
-                            act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
-        GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
-                            act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
-    } else if (PORTC->PORT_PCR[21] & (1 << 24)) {
-        PORT_IRQHandling(PORTC, 21);
-        GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
-                            act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
-        GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
-                            act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+    void PortCD_SingleInterrupt_Handler(){
+        if (PORTC->PORT_PCR[4] & (1 << 24)) {
+            PORT_IRQHandling(PORTC, 4);
+            GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
+                                act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+            GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
+                                act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
+        } else if (PORTC->PORT_PCR[21] & (1 << 24)) {
+            PORT_IRQHandling(PORTC, 21);
+            GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
+                                act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+            GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
+                                act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+        }
     }
-}
 }
 
 extern "C"{
-void LPUART1_Handler() {
-    LPUART_IRQHandling(&lpuart_handle);
-}
+    void LPUART1_Handler() {
+        LPUART_IRQHandling(&lpuart_handle);
+    }
 }
 
 void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app_event) {
@@ -79,17 +76,26 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "m+") == 0){
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_ACT1_FORWARD();
+                GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
+                                    act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+                GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
+                                    act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "m-") == 0){
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_ACT1_REVERSE();
+                GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
+                                    act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
+                GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
+                                    act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "ms") == 0){
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_ACT1_STOP();
+                GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
+                                    act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+                GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
+                                    act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "led off") == 0) {
@@ -177,29 +183,7 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                 JIG_LED_COLOR = COLOR_OFF;
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
-            }
-
-            else if(strcmp(cmd_buffer, "act1 pos") == 0) {
-                memset(cmd_buffer, 0, 256);
-                uint16_t act1_pos_read;
-                act1_pos_read = ADC_Read(&act1_feedback_adc_handle, CHANNEL_A);
-                act1_pos_read = (3300 * act1_pos_read) / 65535;
-                uint8_t whole_number = act1_pos_read / 1000;
-                uint8_t fraction_first_digit = (act1_pos_read - whole_number * 1000) / 100;
-                uint8_t fraction_second_digit = (act1_pos_read - whole_number * 1000 - fraction_first_digit * 100) / 10;
-                uint8_t fraction_third_digit = (act1_pos_read - whole_number * 1000 - fraction_first_digit * 100 -
-                                                fraction_second_digit * 10);
-                LPUART_SendByte(pLPUARTHandle, '\n');
-                LPUART_SendByte(pLPUARTHandle, whole_number + 0x30);
-                LPUART_SendByte(pLPUARTHandle, 0x2E);
-                LPUART_SendByte(pLPUARTHandle, fraction_first_digit + 0x30);
-                LPUART_SendByte(pLPUARTHandle, fraction_second_digit + 0x30 );
-                LPUART_SendByte(pLPUARTHandle, fraction_third_digit + 0x30);
-                LPUART_SendByte(pLPUARTHandle, '\n');
-                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
-            }
-
-            else{
+            } else{
                 memset(cmd_buffer, 0, 256);
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) wrong_cmd_buffer, strlen(wrong_cmd_buffer));
                 LPUART_SendByte(pLPUARTHandle, '\n');

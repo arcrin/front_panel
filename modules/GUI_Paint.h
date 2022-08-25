@@ -51,7 +51,7 @@ typedef enum{
  */
 #define WHITE       0xFF // turn on pixel
 #define BLACK       0x00 // turn off pixel
-#define RED         BLACK
+#define COLOR_RED         BLACK
 
 #define IMAGE_BACKGROUND    WHITE
 #define FONT_FOREGROUND     BLACK

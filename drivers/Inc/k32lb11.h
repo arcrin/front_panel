@@ -284,6 +284,62 @@ typedef struct {
 #define LPUART0_CLOCK_DI()      SIM->SIM_SCGC5 &= ~(1 << 20)
 #define LPUART1_CLOCK_DI()      SIM->SIM_SCGC5 &= ~(1 << 21)
 
+/***********************************************
+ * LPTMR peripheral def
+ ***********************************************/
+#define LPTMR_BASEADDR      0x40040000
+
+typedef struct {
+    _vo uint32_t CSR;
+    _vo uint32_t PSR;
+    _vo uint32_t CMR;
+    _vo uint32_t CNR;
+} LPTMR_RegDef_t, *pLPTMR_RegDef_t;
+
+#define LPTMR   ((pLPTMR_RegDef_t) LPTMR_BASEADDR)
+
+#define LPTMR_CLOCK_EN()        SIM->SIM_SCGC5 |= (1 << 0)
+#define LPTMR_CLOCK_DI()        SIM->SIM_SCGC5 &= ~(1 << 0)
+
+/***************************************
+ * TPM peripheral def
+ ***************************************/
+#define TPM0_BASEADDR       0x40038000
+#define TPM1_BASEADDR       0x40039000
+#define TPM2_BASEADDR       0x4003A000
+
+typedef struct {
+    _vo uint32_t SC;
+    _vo uint32_t CNT;
+    _vo uint32_t MOD;
+    _vo uint32_t C0SC;
+    _vo uint32_t C0V;
+    _vo uint32_t C1SC;
+    _vo uint32_t C1V;
+    _vo uint32_t C2SC;
+    _vo uint32_t C2V;
+    _vo uint32_t C3SC;
+    _vo uint32_t C3V;
+    _vo uint32_t C4SC;
+    _vo uint32_t C4V;
+    _vo uint32_t C5SC;
+    _vo uint32_t C5V;
+    _vo uint32_t STATUS;
+    _vo uint32_t POL;
+    _vo uint32_t CONF;
+} TPM_Reg_Def_t, *pTPM_Reg_Def_t;
+
+#define TPM0    ((pTPM_Reg_Def_t) TPM0_BASEADDR)
+#define TPM1    ((pTPM_Reg_Def_t) TPM1_BASEADDR)
+#define TPM2    ((pTPM_Reg_Def_t) TPM2_BASEADDR)
+
+#define TPM0_CLOCK_EN()     SIM->SIM_SCGC6 |= (1 << 24)
+#define TPM1_CLOCK_EN()     SIM->SIM_SCGC6 |= (1 << 25)
+#define TPM2_CLOCK_EN()     SIM->SIM_SCGC6 |= (1 << 26)
+
+#define TPM0_CLOCK_DI()     SIM->SIM_SCCGC6 &= ~(1 << 24)
+#define TPM1_CLOCK_DI()     SIM->SIM_SCCGC6 &= ~(1 << 25)
+#define TPM2_CLOCK_DI()     SIM->SIM_SCCGC6 &= ~(1 << 26)
 
 /******************************************
  * MCG peripheral def
@@ -299,6 +355,7 @@ typedef struct {
     _vo uint8_t S;
     _vo uint8_t reserve4;
     _vo uint8_t SC;
+    _vo uint8_t reserved5[15];
     _vo uint8_t MC;
 } MCG_RegDef_t;
 
@@ -380,8 +437,6 @@ void delay(uint32_t delay_in_ms);
 #define ENABLE_IRQ()        do{asm volatile("cpsie i");} while(0)
 #define RESET_INTERRUPT()   do{*NVIC_ICPR |= 0xFFFFFFFF;} while(0)
 
-#endif //FRONT_PANEL_K32LB3X_H
-
 #include "gpio_driver.h"
 #include "port_driver.h"
 #include "spi_driver.h"
@@ -389,3 +444,10 @@ void delay(uint32_t delay_in_ms);
 #include "adc_driver.h"
 #include "uart_driver.h"
 #include "lpuart_driver.h"
+#include "lptmr_driver.h"
+#include "tpm_driver.h"
+#include "led_control.h"
+#include "front_panel_peripheral.h"
+
+#endif //FRONT_PANEL_K32LB3X_H
+

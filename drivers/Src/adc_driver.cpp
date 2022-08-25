@@ -100,7 +100,6 @@ void ADC_Init(pADC_Handle_t pADCHandle){
     // SC2 Register
     temp = (pADCHandle->InterruptControlB |
             pADCHandle->DifferentialModeB |
-            pADCHandle->InputChannelB |
             0x1F);
 
     pADCHandle->pADCx->SC1B |= temp;
@@ -110,3 +109,24 @@ void ADC_Init(pADC_Handle_t pADCHandle){
     ADC_Cal(pADCHandle->pADCx);
 }
 
+
+uint16_t ADC_Read(pADC_Handle_t pADCHandle, uint8_t channel){
+    uint32_t tempreg;
+    uint16_t dummy_read = 0;
+    if (channel == CHANNEL_A){
+        tempreg = pADCHandle->pADCx->SC1A;
+        tempreg &= ~(0x1F);
+        pADCHandle->pADCx->SC1A = tempreg;
+        pADCHandle->pADCx->SC1A = (tempreg | pADCHandle->InputChannelA);
+        while(!(pADCHandle->pADCx->SC1A & (1 << ADC_SC1_COCO)));
+        dummy_read = pADCHandle->pADCx->RA & 0xFFFF;
+    } else if (channel == CHANNEL_B) {
+        tempreg = pADCHandle->pADCx->SC1B;
+        tempreg &= ~(0x1F);
+        pADCHandle->pADCx->SC1B = tempreg;
+        pADCHandle->pADCx->SC1B = (tempreg | pADCHandle->InputChannelB);
+        while (!(pADCHandle->pADCx->SC1B & (1 << ADC_SC1_COCO)));
+        dummy_read = pADCHandle->pADCx->RB & 0xFFFF;
+    }
+    return dummy_read;
+}

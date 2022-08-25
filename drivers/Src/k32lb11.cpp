@@ -8,10 +8,11 @@ _vo uint32_t sysTick_count;
 
 void MCG_Init(){
     uint8_t temp;
-    temp = 0x40;
+    temp = 0x2; // [7:6] HIRC as source for MCGOUTCLK
+                // [1] enable internal reference clock
     MCG->C1 = temp;
 
-    temp = 0x1;
+    temp = 0x1; // [0] 8 MHz LIRC mode, irrelevant since I would use HIRC as source
     MCG->C2 = temp;
 }
 

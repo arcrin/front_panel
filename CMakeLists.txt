@@ -20,25 +20,31 @@ set(PROJECT_FILES
         drivers/Src/i2c_driver.cpp
         drivers/Inc/adc_driver.h
         drivers/Src/adc_driver.cpp
-        drivers/Inc/uart_driver.h
-        drivers/Src/uart_driver.cpp
+#        drivers/Inc/uart_driver.h
+#        drivers/Src/uart_driver.cpp
         drivers/Inc/lpuart_driver.h
         drivers/Src/lpuart_driver.cpp
+        drivers/Inc/lptmr_driver.h
+        drivers/Src/lptmr_driver.cpp
+        drivers/Inc/tpm_driver.h
+        drivers/Src/tpm_driver.cpp
+        drivers/Inc/led_control.h
+        drivers/Src/led_control.cpp
         drivers/Inc/front_panel_peripheral.h
         drivers/Src/front_panel_peripheral.cpp
-        modules/fonts/fonts.h
-        modules/fonts/font8.cpp
-        modules/fonts/font12.cpp
-        modules/fonts/font16.cpp
-        modules/fonts/font20.cpp
-        modules/fonts/font24.cpp
-        modules/GUI_Paint.h
-        modules/GUI_Paint.cpp
-        modules/ImageData.h
-        modules/ImageData.cpp
+#        modules/fonts/fonts.h
+#        modules/fonts/font8.cpp
+#        modules/fonts/font12.cpp
+#        modules/fonts/font16.cpp
+#        modules/fonts/font20.cpp
+#        modules/fonts/font24.cpp
+#        modules/GUI_Paint.h
+#        modules/GUI_Paint.cpp
+#        modules/ImageData.h
+#        modules/ImageData.cpp
         modules/epaper_front_panel.h
         modules/epaper_front_panel.cpp
-        Src/exp8_i2c_master_rx_it.cpp
+        Src/front_panel_controller.cpp
         startup.c
         )
 
@@ -61,7 +67,7 @@ target_compile_options(${EXECUTABLE} PRIVATE
         -mfloat-abi=soft
         -Wall
         -fno-exceptions
-        $<$<CONFIG:Debug>:-O0>
+        $<$<CONFIG:Debug>:-O1>
         )
 
 target_link_options(${EXECUTABLE} PRIVATE
@@ -72,3 +78,12 @@ target_link_options(${EXECUTABLE} PRIVATE
         --specs=nosys.specs
         -Wl,-Map=${PROJECT_NAME}.map
         )
+
+add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
+        COMMAND arm-none-eabi-objcopy -O ihex ${PROJECT_NAME}.elf ${PROJECT_NAME}.hex
+        COMMAND arm-none-eabi-objcopy -O binary ${PROJECT_NAME}.elf ${PROJECT_NAME}.bin
+        COMMAND arm-none-eabi-nm -C -l -n -S ${PROJECT_NAME}.elf > ${PROJECT_NAME}.sym
+        COMMAND arm-none-eabi-nm -C -l --size-sort -S ${PROJECT_NAME}.elf > ${PROJECT_NAME}.symsize
+        COMMAND arm-none-eabi-objdump -S -C -j .text -j .data -j .bss ${PROJECT_NAME}.elf > ${PROJECT_NAME}.lst
+        COMMAND arm-none-eabi-size ${PROJECT_NAME}.elf | tee ${PROJECT_NAME}.siz
+        WORKING_DIRECTORY ${OUTPUT_DIR})

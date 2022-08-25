@@ -196,6 +196,11 @@ typedef struct {
 #define AVGS_16             0x02
 #define AVGS_32             0x03
 
+/*************************
+ * Channel
+ *************************/
+#define CHANNEL_A        0
+#define CHANNEL_B        1
 
 /*********************
  * API
@@ -203,6 +208,8 @@ typedef struct {
 void ADC_Init(pADC_Handle_t pADCHandle);
 
 void ADC_Cal(pADC_RegDef_t pADCx);
+
+uint16_t ADC_Read(pADC_Handle_t pADCHandle, uint8_t channel);
 
 #endif //FRONT_PANEL_ADC_DRIVER_H
 
