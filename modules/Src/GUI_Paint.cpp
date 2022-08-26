@@ -2,7 +2,7 @@
 // Created by wbai on 8/8/2022.
 //
 
-#include "GUI_Paint.h"
+#include "Inc/GUI_Paint.h"
 #include "cstdint"
 #include "cstdlib"
 

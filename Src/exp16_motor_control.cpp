@@ -1,7 +1,7 @@
 //
 // Created by wbai on 8/23/2022.
 //
-#include "front_panel_peripheral.h"
+#include "Inc/front_panel_peripheral.h"
 
 char display_buffer[15] = "Front Panel->";
 char empty_buffer[256] = "                                                   ";

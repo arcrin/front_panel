@@ -1,7 +1,7 @@
 //
 // Created by andy- on 2022-08-17.
 //
-#include "front_panel_peripheral.h"
+#include "Inc/front_panel_peripheral.h"
 
 char display_buffer[15] = "Front Panel->";
 char empty_buffer[256] = "                                                   ";
@@ -63,7 +63,7 @@ void PortCD_SingleInterrupt_Handler(){
 extern "C"{
 void LPUART1_Handler() {
     LPUART_IRQHandling(&lpuart_handle);
-}
+    }
 }
 
 void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app_event) {
@@ -77,14 +77,32 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) firmware_info_buffer, strlen(firmware_info_buffer));
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
-            } else if(strcmp(cmd_buffer, "m+") == 0){
+            } else if((cmd_buffer[0] + cmd_buffer[1]) == 152){
+                uint8_t speed = 0;
+                if (strlen(cmd_buffer) == 4)
+                {
+                    speed = (cmd_buffer[2] - 0x30) * 10 + (cmd_buffer[3] - 0x30);
+                } else if (strlen(cmd_buffer) == 3){
+                    speed = cmd_buffer[2] - 0x30;
+                } else if (strlen(cmd_buffer) == 5){
+                    speed = (cmd_buffer[2] - 0x30) * 100 + (cmd_buffer[3] - 0x30) * 10 +  (cmd_buffer[4] - 0x30);
+                }
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_ACT1_FORWARD();
+                FRONT_PANEL_ACT1_FORWARD(speed);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
-            } else if(strcmp(cmd_buffer, "m-") == 0){
+            } else if((cmd_buffer[0] + cmd_buffer[1]) == 154){
+                uint8_t speed = (cmd_buffer[2] - 0x30) * 10 + (cmd_buffer[3] - 0x30);
+                if (strlen(cmd_buffer) == 4)
+                {
+                    speed = (cmd_buffer[2] - 0x30) * 10 + (cmd_buffer[3] - 0x30);
+                } else if (strlen(cmd_buffer) == 3){
+                    speed = cmd_buffer[2] - 0x30;
+                } else if (strlen(cmd_buffer) == 5){
+                    speed = (cmd_buffer[2] - 0x30) * 100 + (cmd_buffer[3] - 0x30) * 10 +  (cmd_buffer[4] - 0x30);
+                }
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_ACT1_REVERSE();
+                FRONT_PANEL_ACT1_REVERSE(speed);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "ms") == 0){

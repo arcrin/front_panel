@@ -2,7 +2,7 @@
 // Created by wbai on 8/8/2022.
 //
 
-#include "epaper_front_panel.h"
+#include "Inc/epaper_front_panel.h"
 #include "k32lb11.h"
 
 //const unsigned char WF_PARTIAL[159] ={

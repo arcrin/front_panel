@@ -5,7 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <cstring>
-#include "barcode.h"
+#include "Inc/barcode.h"
 
 
 const char* value_width_map[107] = { // TODO: why does std::string work here?

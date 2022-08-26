@@ -2,7 +2,7 @@
 // Created by andy- on 2022-08-17.
 //
 
-#include "front_panel_peripheral.h"
+#include "Inc/front_panel_peripheral.h"
 
 PORT_Handle_t start_release_button_port_handle;
 GPIO_Handle_t start_release_button_gpio_handle;
@@ -84,28 +84,19 @@ void FRONT_PANEL_RESEAT_BUTTON_INIT(){
 void FRONT_PANEL_ACT1_CONTROL_INIT(){
     act1_forward_control_port_handle.pPORT = PORTE;
     act1_forward_control_port_handle.PORT_Config.PORT_Pin_Number = 20;
-    act1_forward_control_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
+    act1_forward_control_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION3;
     act1_forward_control_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
     act1_forward_control_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
     PORT_Init(&act1_forward_control_port_handle);
 
-    act1_forward_control_gpio_handle.pGPIOx = GPIOE;
-    act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber = 20;
-    act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_OUTPUT;
-    GPIO_Init(&act1_forward_control_gpio_handle);
-
-
     act1_reverse_control_port_handle.pPORT = PORTE;
     act1_reverse_control_port_handle.PORT_Config.PORT_Pin_Number = 21;
-    act1_reverse_control_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
+    act1_reverse_control_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION3;
     act1_reverse_control_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
     act1_reverse_control_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
     PORT_Init(&act1_reverse_control_port_handle);
 
-    act1_reverse_control_gpio_handle.pGPIOx = GPIOE;
-    act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber = 21;
-    act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_OUTPUT;
-    GPIO_Init(&act1_reverse_control_gpio_handle);
+    TPM1_Init();
 }
 
 void FRONT_PANEL_LPUART_INIT(){
@@ -183,24 +174,34 @@ void FRONT_PANEL_ADC0_INIT(){
     ADC_Init(&act1_feedback_adc_handle);
 }
 
-void FRONT_PANEL_ACT1_FORWARD(){
-    GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
-                        act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
-    GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
-                        act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
+void FRONT_PANEL_ACT1_FORWARD(uint8_t speed){
+    TPM1->SC &= ~(0x3 << TPM_SC_CMOD); // Disable TPM counter, this is universal for the entire TMP1 module
+    uint16_t max_speed = TPM1->MOD;
+    TPM1->CNT = 0xFFFF; // clear Counter register to avoid confusion of cycle start
+    // configure the forward control channel with new speed (PWM duty cycle)
+    uint16_t new_speed = max_speed * speed / 100;
+    TPM1->C0V = new_speed;
+
+    // backward control channel stays low
+    TPM1->C1V = (uint16_t) 0x0;
+
+    TPM1->SC |= (0x1 << TPM_SC_CMOD); // enable TPM counter
 }
 
-void FRONT_PANEL_ACT1_REVERSE(){
-    GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
-                        act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
-    GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
-                        act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+void FRONT_PANEL_ACT1_REVERSE(uint8_t speed){
+    TPM1->SC &= ~(0x3 << TPM_SC_CMOD); // Disable TPM counter, this is universal for the entire TMP1 module
+    uint16_t max_speed = TPM1->MOD;
+    TPM1->CNT = 0xFFFF; // clear Counter register to avoid confusion of cycle start
+    // configure the forward control channel with new speed (PWM duty cycle)
+    uint16_t new_speed = max_speed * speed / 100;
+    TPM1->C1V = new_speed;
+
+    // backward control channel stays low
+    TPM1->C0V = (uint16_t) 0x0;
+
+    TPM1->SC |= (0x1 << TPM_SC_CMOD); // enable TPM counter
 }
 
 void FRONT_PANEL_ACT1_STOP(){
-
-    GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
-                        act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
-    GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
-                        act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+    TPM1->SC &= ~(0x3 << TPM_SC_CMOD);
 }

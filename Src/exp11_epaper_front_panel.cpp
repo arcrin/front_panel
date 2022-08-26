@@ -7,8 +7,8 @@
 // Created by wbai on 8/8/2022.
 //
 
-#include "epaper_front_panel.h"
-#include "GUI_Paint.h"
+#include "Inc/epaper_front_panel.h"
+#include "Inc/GUI_Paint.h"
 //#include "barcode.h"
 
 extern const unsigned char label_image[];

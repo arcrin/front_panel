@@ -89,6 +89,7 @@ typedef struct {
     _vo uint32_t SIM_SRVCOP;
 }SIM_RegDef_t, *pSIM_RegDef_t;
 
+#define SIM     ((pSIM_RegDef_t) SIM_BASEADDR)
 
 /************************************************
  * GPIO peripheral def
@@ -108,7 +109,7 @@ typedef struct {
     _vo uint32_t PDDR;
 } GPIO_RegDef_t, *pGPIO_RegDef_t;
 
-#define SIM     ((pSIM_RegDef_t) SIM_BASEADDR)
+
 
 #define PORTA    ((pPORT_RegDef_t) PORTA_BASEADDR)
 #define PORTB    ((pPORT_RegDef_t) PORTB_BASEADDR)
@@ -446,8 +447,8 @@ void delay(uint32_t delay_in_ms);
 #include "lpuart_driver.h"
 #include "lptmr_driver.h"
 #include "tpm_driver.h"
-#include "led_control.h"
-#include "front_panel_peripheral.h"
+#include "Inc/led_control.h"
+#include "Inc/front_panel_peripheral.h"
 
 #endif //FRONT_PANEL_K32LB3X_H
 

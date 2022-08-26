@@ -28,10 +28,10 @@ set(PROJECT_FILES
         drivers/Src/lptmr_driver.cpp
         drivers/Inc/tpm_driver.h
         drivers/Src/tpm_driver.cpp
-        drivers/Inc/led_control.h
-        drivers/Src/led_control.cpp
-        drivers/Inc/front_panel_peripheral.h
-        drivers/Src/front_panel_peripheral.cpp
+        modules/Inc/led_control.h
+        modules/Src/led_control.cpp
+        modules/Inc/front_panel_peripheral.h
+        modules/Src/front_panel_peripheral.cpp
 #        modules/fonts/fonts.h
 #        modules/fonts/font8.cpp
 #        modules/fonts/font12.cpp
@@ -42,8 +42,8 @@ set(PROJECT_FILES
 #        modules/GUI_Paint.cpp
 #        modules/ImageData.h
 #        modules/ImageData.cpp
-        modules/epaper_front_panel.h
-        modules/epaper_front_panel.cpp
+        modules/Inc/epaper_front_panel.h
+        modules/Src/epaper_front_panel.cpp
         Src/front_panel_controller.cpp
         startup.c
         )

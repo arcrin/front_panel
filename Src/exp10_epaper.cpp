@@ -3,7 +3,7 @@
 //
 
 #include "backup/epaper.h"
-#include "GUI_Paint.h"
+#include "Inc/GUI_Paint.h"
 //#include "barcode.h"
 
 extern const unsigned char label_image[];

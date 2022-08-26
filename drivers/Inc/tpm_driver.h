@@ -65,7 +65,16 @@
 #define TPM_CONF_TRGSRC     23
 #define TPM_CONF_TRGSEL     24
 
-void TPM_Init();
+/*************************************
+ * TPM Handle
+ *************************************/
+// typedef struct{
+//
+// };
+
+void TPM1_Init();
+
+void TPM2_Init();
 
 
 
