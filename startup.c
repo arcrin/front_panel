@@ -48,7 +48,7 @@ void SPI1_Handler                   (void) __attribute__ ((weak, alias("Default_
 void LPUART0_Handler                (void) __attribute__ ((weak, alias("Default_Handler")));
 void LPUART1_Handler                (void) __attribute__ ((weak, alias("Default_Handler")));
 void UART2_FlexIO_Handler           (void) __attribute__ ((weak, alias("Default_Handler")));
-void ADC0_Hanlder                   (void) __attribute__ ((weak, alias("Default_Handler")));
+void ADC0_Handler                   (void) __attribute__ ((weak, alias("Default_Handler")));
 void CMP0_Handler                   (void) __attribute__ ((weak, alias("Default_Handler")));
 void TPM0_Handler                   (void) __attribute__ ((weak, alias("Default_Handler")));
 void TPM1_Handler                   (void) __attribute__ ((weak, alias("Default_Handler")));
@@ -96,7 +96,7 @@ uint32_t vectors[] __attribute__((section(".isr_vector"))) = {
         (uint32_t)LPUART0_Handler,
         (uint32_t)LPUART1_Handler,
         (uint32_t)UART2_FlexIO_Handler,
-        (uint32_t)ADC0_Hanlder,
+        (uint32_t)ADC0_Handler,
         (uint32_t)CMP0_Handler,
         (uint32_t)TPM0_Handler,
         (uint32_t)TPM1_Handler,

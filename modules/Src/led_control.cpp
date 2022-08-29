@@ -50,7 +50,7 @@ void code1(pGPIO_RegDef_t pGPIOx, uint8_t pin_number){
     delay_400ns();
 }
 
-void LED_GREEN(pGPIO_RegDef_t pGPIOx, uint8_t pin_number){
+void LED_GREEN(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name){
     DISABLE_IRQ();
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
@@ -79,9 +79,10 @@ void LED_GREEN(pGPIO_RegDef_t pGPIOx, uint8_t pin_number){
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     ENABLE_IRQ();
+    *led_name = COLOR_GREEN;
 }
 
-void LED_RED(pGPIO_RegDef_t pGPIOx, uint8_t pin_number){
+void LED_RED(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name){
     DISABLE_IRQ();
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
@@ -110,15 +111,25 @@ void LED_RED(pGPIO_RegDef_t pGPIOx, uint8_t pin_number){
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     ENABLE_IRQ();
+    *led_name = COLOR_RED;
 }
 
-void LED_BLUE(pGPIO_RegDef_t pGPIOx, uint8_t pin_number){
+void LED_AMBER(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name){
     DISABLE_IRQ();
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
+    code1(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code1(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
@@ -129,21 +140,46 @@ void LED_BLUE(pGPIO_RegDef_t pGPIOx, uint8_t pin_number){
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
-    code0(pGPIOx, pin_number);
-    code0(pGPIOx, pin_number);
-
-    code0(pGPIOx, pin_number);
-    code0(pGPIOx, pin_number);
-    code0(pGPIOx, pin_number);
-    code1(pGPIOx, pin_number);
-    code0(pGPIOx, pin_number);
-    code1(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     ENABLE_IRQ();
+    *led_name = COLOR_AMBER;
 }
 
-void LED_OFF(pGPIO_RegDef_t pGPIOx, uint8_t pin_number){
+
+void LED_BLUE(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name){
+    DISABLE_IRQ();
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code1(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code1(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
+    ENABLE_IRQ();
+    *led_name = COLOR_BLUE;
+}
+
+void LED_OFF(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name){
     DISABLE_IRQ();
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
@@ -172,4 +208,5 @@ void LED_OFF(pGPIO_RegDef_t pGPIOx, uint8_t pin_number){
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     ENABLE_IRQ();
+    *led_name = COLOR_OFF;
 }

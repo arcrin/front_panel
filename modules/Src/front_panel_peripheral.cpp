@@ -13,20 +13,33 @@ GPIO_Handle_t reseat_button_gpio_handle;
 PORT_Handle_t test_status_led_port_handle;
 GPIO_Handle_t test_status_led_gpio_handle;
 
-PORT_Handle_t act1_reverse_control_port_handle;
-GPIO_Handle_t act1_reverse_control_gpio_handle;
-
 PORT_Handle_t act1_forward_control_port_handle;
 GPIO_Handle_t act1_forward_control_gpio_handle;
 
+PORT_Handle_t act1_reverse_control_port_handle;
+GPIO_Handle_t act1_reverse_control_gpio_handle;
+
+PORT_Handle_t act2_forward_control_port_handle;
+GPIO_Handle_t act2_forward_control_gpio_handle;
+
 PORT_Handle_t act2_reverse_control_port_handle;
 GPIO_Handle_t act2_reverse_control_gpio_handle;
+
 
 PORT_Handle_t lpuart_port_handle;
 LPUART_Handle_t lpuart_handle;
 
 PORT_Handle_t act1_feedback_adc_port_handle;
 ADC_Handle_t act1_feedback_adc_handle;
+
+uint8_t TEST_LED_COLOR = COLOR_OFF;
+uint8_t JIG_LED_COLOR = COLOR_OFF;
+
+uint8_t ACT1_STATUS = STOP;
+uint8_t ACT2_STATUS = STOP;
+
+uint8_t ACT1_SPEED = 0;
+uint8_t ACT2_SPEED = 0;
 
 
 void FRONT_PANEL_TEST_STATUS_LED_INIT(){
@@ -99,6 +112,24 @@ void FRONT_PANEL_ACT1_CONTROL_INIT(){
     TPM1_Init();
 }
 
+void FRONT_PANEL_ACT2_CONTROL_INIT(){
+    act2_forward_control_port_handle.pPORT = PORTA;
+    act2_forward_control_port_handle.PORT_Config.PORT_Pin_Number = 2;
+    act2_forward_control_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION3;
+    act2_forward_control_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+    act2_forward_control_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
+    PORT_Init(&act2_forward_control_port_handle);
+
+    act2_reverse_control_port_handle.pPORT = PORTA;
+    act2_reverse_control_port_handle.PORT_Config.PORT_Pin_Number = 1;
+    act2_reverse_control_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION3;
+    act2_reverse_control_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+    act2_reverse_control_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
+    PORT_Init(&act2_reverse_control_port_handle);
+
+    TPM2_Init();
+}
+
 void FRONT_PANEL_LPUART_INIT(){
     lpuart_port_handle.pPORT = PORTE;
     lpuart_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION3;
@@ -151,8 +182,9 @@ void FRONT_PANEL_ADC0_INIT(){
     act1_feedback_adc_handle.LongSampleTimeSelect = ADLSTS_2;
 
     // SC2
-    act1_feedback_adc_handle.ConversionTriggerSelect = ADTRG_SW;
     act1_feedback_adc_handle.CompareFunctionEnable = ACFE_DISABLED;
+    act1_feedback_adc_handle.ConversionTriggerSelect = ADTRG_SW;
+    act1_feedback_adc_handle.CompareFunctionGTEnable = ACFGT_GREATER;
     act1_feedback_adc_handle.CompareFunctionRangeEnable = ACREN_DISABLED;
     act1_feedback_adc_handle.VoltageRefSelect = REFSEL_EXT;
 
@@ -171,6 +203,9 @@ void FRONT_PANEL_ADC0_INIT(){
     act1_feedback_adc_handle.DifferentialModeB = DIFF_SINGLE;
     act1_feedback_adc_handle.InputChannelB = 0x1F;
 
+    // CV
+    act1_feedback_adc_handle.CompareValue = 0x7FFF;
+
     ADC_Init(&act1_feedback_adc_handle);
 }
 
@@ -184,6 +219,8 @@ void FRONT_PANEL_ACT1_FORWARD(uint8_t speed){
 
     // backward control channel stays low
     TPM1->C1V = (uint16_t) 0x0;
+
+    ACT1_STATUS = FORWARD;
 
     TPM1->SC |= (0x1 << TPM_SC_CMOD); // enable TPM counter
 }
@@ -199,9 +236,50 @@ void FRONT_PANEL_ACT1_REVERSE(uint8_t speed){
     // backward control channel stays low
     TPM1->C0V = (uint16_t) 0x0;
 
+    ACT1_STATUS = REVERSE;
+
     TPM1->SC |= (0x1 << TPM_SC_CMOD); // enable TPM counter
 }
 
 void FRONT_PANEL_ACT1_STOP(){
     TPM1->SC &= ~(0x3 << TPM_SC_CMOD);
+    ACT1_STATUS = STOP;
+}
+
+
+void FRONT_PANEL_ACT2_FORWARD(uint8_t speed){
+    TPM2->SC &= ~(0x3 << TPM_SC_CMOD); // Disable TPM counter, this is universal for the entire TMP1 module
+    uint16_t max_speed = TPM2->MOD;
+    TPM2->CNT = 0xFFFF; // clear Counter register to avoid confusion of cycle start
+    // configure the forward control channel with new speed (PWM duty cycle)
+    uint16_t new_speed = max_speed * speed / 100;
+    TPM2->C0V = new_speed;
+
+    // backward control channel stays low
+    TPM2->C1V = (uint16_t) 0x0;
+
+    ACT1_STATUS = FORWARD;
+
+    TPM2->SC |= (0x1 << TPM_SC_CMOD); // enable TPM counter
+}
+
+void FRONT_PANEL_ACT2_REVERSE(uint8_t speed){
+    TPM2->SC &= ~(0x3 << TPM_SC_CMOD); // Disable TPM counter, this is universal for the entire TMP1 module
+    uint16_t max_speed = TPM2->MOD;
+    TPM2->CNT = 0xFFFF; // clear Counter register to avoid confusion of cycle start
+    // configure the forward control channel with new speed (PWM duty cycle)
+    uint16_t new_speed = max_speed * speed / 100;
+    TPM2->C1V = new_speed;
+
+    // backward control channel stays low
+    TPM2->C0V = (uint16_t) 0x0;
+
+    ACT1_STATUS = REVERSE;
+
+    TPM2->SC |= (0x1 << TPM_SC_CMOD); // enable TPM counter
+}
+
+void FRONT_PANEL_ACT2_STOP(){
+    TPM2->SC &= ~(0x3 << TPM_SC_CMOD);
+    ACT1_STATUS = STOP;
 }

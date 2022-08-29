@@ -66,6 +66,7 @@ void ADC_Init(pADC_Handle_t pADCHandle){
     pADCHandle->pADCx->CFG1 |= temp;
 
     // CFG2 Register
+    temp = 0;
     temp = (pADCHandle->AsyncClockOutputEnable |
             pADCHandle->HighSpeedConfig |
             pADCHandle->LongSampleTimeSelect);
@@ -73,6 +74,7 @@ void ADC_Init(pADC_Handle_t pADCHandle){
     pADCHandle->pADCx->CFG2 |= temp;
 
     // SC2 Register
+    temp = 0;
     temp = (pADCHandle->ConversionTriggerSelect |
             pADCHandle->CompareFunctionEnable |
             pADCHandle->CompareFunctionGTEnable |
@@ -83,6 +85,7 @@ void ADC_Init(pADC_Handle_t pADCHandle){
     pADCHandle->pADCx->SC2 |= temp;
 
     // SC3 Register
+    temp = 0;
     temp = (pADCHandle->ContinuousConversionEnable |
             pADCHandle->HardwareAverageEnable |
             pADCHandle->HardwareAverageSelect);
@@ -91,19 +94,25 @@ void ADC_Init(pADC_Handle_t pADCHandle){
 
 
     // SC1 Register
+    temp = 0;
     temp = (pADCHandle->InterruptControlA |
             pADCHandle->DifferentialModeA |
             0x1F);
 
     pADCHandle->pADCx->SC1A |= temp;
 
-    // SC2 Register
+    // SC1B Register
+    temp = 0;
     temp = (pADCHandle->InterruptControlB |
             pADCHandle->DifferentialModeB |
             0x1F);
 
     pADCHandle->pADCx->SC1B |= temp;
 
+    pADCHandle->pADCx->CV1 = pADCHandle->CompareValue;
+
+    IRQPriorityConfig(IRQ_NUMBER_ADC0, 3);
+    InterruptConfig(IRQ_NUMBER_ADC0, ENABLE);
 
     // Calibration
     ADC_Cal(pADCHandle->pADCx);
@@ -129,4 +138,19 @@ uint16_t ADC_Read(pADC_Handle_t pADCHandle, uint8_t channel){
         dummy_read = pADCHandle->pADCx->RB & 0xFFFF;
     }
     return dummy_read;
+}
+
+void ADC_Interrupt_Start(pADC_Handle_t pADCHandle, uint8_t channel){
+    uint32_t tempreg;
+    if (channel == CHANNEL_A){
+        tempreg = pADCHandle->pADCx->SC1A;
+        tempreg &= ~(0x1F);
+        pADCHandle->pADCx->SC1A = tempreg;
+        pADCHandle->pADCx->SC1A = (tempreg | pADCHandle->InputChannelA);
+    } else if (channel == CHANNEL_B) {
+        tempreg = pADCHandle->pADCx->SC1B;
+        tempreg &= ~(0x1F);
+        pADCHandle->pADCx->SC1B = tempreg;
+        pADCHandle->pADCx->SC1B = (tempreg | pADCHandle->InputChannelB);
+    }
 }

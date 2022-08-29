@@ -39,6 +39,8 @@ typedef struct {
     uint8_t ContinuousConversionEnable;
     uint8_t HardwareAverageEnable;
     uint8_t HardwareAverageSelect;
+    //CV register
+    uint16_t CompareValue=0;
 } ADC_Handle_t, *pADC_Handle_t;
 
 /****************************
@@ -208,6 +210,8 @@ typedef struct {
 void ADC_Init(pADC_Handle_t pADCHandle);
 
 void ADC_Cal(pADC_RegDef_t pADCx);
+
+void ADC_Interrupt_Start(pADC_Handle_t pADCHandle, uint8_t channel);
 
 uint16_t ADC_Read(pADC_Handle_t pADCHandle, uint8_t channel);
 

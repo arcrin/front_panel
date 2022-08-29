@@ -386,6 +386,8 @@ uint32_t get_tick();
 
 void delay(uint32_t delay_in_ms);
 
+void delay_no_block(uint8_t delay_in_ms);
+
 
 /*
  * IRQ Numbers

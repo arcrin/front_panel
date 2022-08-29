@@ -22,8 +22,15 @@ extern LPUART_Handle_t lpuart_handle;
 
 extern ADC_Handle_t act1_feedback_adc_handle;
 
-uint8_t TEST_LED_COLOR = COLOR_OFF;
-uint8_t JIG_LED_COLOR = COLOR_OFF;
+extern uint8_t TEST_LED_COLOR;
+extern uint8_t JIG_LED_COLOR;
+
+extern uint8_t ACT1_STATUS;
+extern uint8_t ACT2_STATUS;
+
+extern uint8_t ACT1_SPEED;
+extern uint8_t ACT2_SPEED;
+
 
 
 
@@ -39,25 +46,33 @@ int main(){
     FRONT_PANEL_LPUART_INIT();
     FRONT_PANEL_ADC0_INIT();
     ENABLE_IRQ();
-    while (1);
+    while (1){
+        if(ACT1_STATUS == FORWARD){
+            FRONT_PANEL_ACT1_FORWARD(ACT1_SPEED);
+            if (ADC_Read(&act1_feedback_adc_handle, CHANNEL_A) > 0xE665){
+                FRONT_PANEL_ACT1_STOP();
+            }
+        }
+        else if(ACT1_STATUS == REVERSE){
+            FRONT_PANEL_ACT1_REVERSE(ACT1_SPEED);
+            if (ADC_Read(&act1_feedback_adc_handle, CHANNEL_A) < 0x3333){
+                FRONT_PANEL_ACT1_STOP();
+            }
+        }
+        if (TEST_LED_COLOR != COLOR_OFF){
+            LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                      &TEST_LED_COLOR);
+            LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                    &JIG_LED_COLOR);
+        }
+
+    }
 }
 
 extern "C"{
-void PortCD_SingleInterrupt_Handler(){
-    if (PORTC->PORT_PCR[4] & (1 << 24)) {
-        PORT_IRQHandling(PORTC, 4);
-        GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
-                            act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
-        GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
-                            act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
-    } else if (PORTC->PORT_PCR[21] & (1 << 24)) {
-        PORT_IRQHandling(PORTC, 21);
-        GPIO_WriteOutputPin(act1_forward_control_gpio_handle.pGPIOx,
-                            act1_forward_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
-        GPIO_WriteOutputPin(act1_reverse_control_gpio_handle.pGPIOx,
-                            act1_reverse_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+    void ADC0_Handler(){
+        FRONT_PANEL_ACT1_STOP();
     }
-}
 }
 
 extern "C"{
@@ -77,7 +92,7 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) firmware_info_buffer, strlen(firmware_info_buffer));
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
-            } else if((cmd_buffer[0] + cmd_buffer[1]) == 152){
+            } else if((cmd_buffer[0] + cmd_buffer[1]) == 152){ // forward
                 uint8_t speed = 0;
                 if (strlen(cmd_buffer) == 4)
                 {
@@ -88,10 +103,12 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                     speed = (cmd_buffer[2] - 0x30) * 100 + (cmd_buffer[3] - 0x30) * 10 +  (cmd_buffer[4] - 0x30);
                 }
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_ACT1_FORWARD(speed);
+//                FRONT_PANEL_ACT1_FORWARD(speed);
+                ACT1_SPEED = speed;
+                ACT1_STATUS = FORWARD;
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
-            } else if((cmd_buffer[0] + cmd_buffer[1]) == 154){
+            } else if((cmd_buffer[0] + cmd_buffer[1]) == 154){ // reverse
                 uint8_t speed = (cmd_buffer[2] - 0x30) * 10 + (cmd_buffer[3] - 0x30);
                 if (strlen(cmd_buffer) == 4)
                 {
@@ -102,7 +119,9 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                     speed = (cmd_buffer[2] - 0x30) * 100 + (cmd_buffer[3] - 0x30) * 10 +  (cmd_buffer[4] - 0x30);
                 }
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_ACT1_REVERSE(speed);
+//                FRONT_PANEL_ACT1_REVERSE(speed);
+                ACT1_SPEED = speed;
+                ACT1_STATUS = REVERSE;
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "ms") == 0){
@@ -112,87 +131,168 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "led off") == 0) {
                 memset(cmd_buffer, 0, 256);
-                LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
-                LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                        &TEST_LED_COLOR);
+                LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                        &JIG_LED_COLOR);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "test led green") == 0) {
                 memset(cmd_buffer, 0, 256);
-                LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                          &TEST_LED_COLOR);
                 if (JIG_LED_COLOR == COLOR_GREEN){
-                    LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_GREEN(test_status_led_gpio_handle.pGPIOx,
+                              test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
                 } else if (JIG_LED_COLOR == COLOR_RED) {
-                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
+                } else if (JIG_LED_COLOR == COLOR_AMBER) {
+                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
                 } else if (JIG_LED_COLOR == COLOR_OFF) {
-                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
                 }
-                TEST_LED_COLOR = COLOR_GREEN;
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "test led red") == 0) {
                 memset(cmd_buffer, 0, 256);
-                LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                        &TEST_LED_COLOR);
                 if (JIG_LED_COLOR == COLOR_GREEN){
-                    LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_GREEN(test_status_led_gpio_handle.pGPIOx,
+                              test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
                 } else if (JIG_LED_COLOR == COLOR_RED) {
-                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
+                } else if (JIG_LED_COLOR == COLOR_AMBER) {
+                    LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
                 } else if (JIG_LED_COLOR == COLOR_OFF) {
-                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
                 }
-                TEST_LED_COLOR = COLOR_RED;
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            } else if(strcmp(cmd_buffer, "test led amber") == 0) {
+                memset(cmd_buffer, 0, 256);
+                LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                          &TEST_LED_COLOR);
+                if (JIG_LED_COLOR == COLOR_GREEN){
+                    LED_GREEN(test_status_led_gpio_handle.pGPIOx,
+                              test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
+                } else if (JIG_LED_COLOR == COLOR_RED) {
+                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
+                } else if (JIG_LED_COLOR == COLOR_AMBER) {
+                    LED_AMBER(test_status_led_gpio_handle.pGPIOx,
+                              test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
+                } else if (JIG_LED_COLOR == COLOR_OFF) {
+                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
+                }
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "test led off") == 0) {
                 memset(cmd_buffer, 0, 256);
-                LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                        &TEST_LED_COLOR);
                 if (JIG_LED_COLOR == COLOR_GREEN){
-                    LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_GREEN(test_status_led_gpio_handle.pGPIOx,
+                              test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
                 } else if (JIG_LED_COLOR == COLOR_RED) {
-                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
+                }  else if (JIG_LED_COLOR == COLOR_AMBER) {
+                    LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
                 } else if (JIG_LED_COLOR == COLOR_OFF) {
-                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &JIG_LED_COLOR);
                 }
-                TEST_LED_COLOR = COLOR_OFF;
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "jig led green") == 0) {
                 memset(cmd_buffer, 0, 256);
                 if (TEST_LED_COLOR == COLOR_GREEN){
-                    LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_GREEN(test_status_led_gpio_handle.pGPIOx,
+                              test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &TEST_LED_COLOR);
                 } else if (TEST_LED_COLOR == COLOR_RED) {
-                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
+                } else if (TEST_LED_COLOR == COLOR_AMBER) {
+                    LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
                 } else if (TEST_LED_COLOR == COLOR_OFF) {
-                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
                 }
-                LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
-                JIG_LED_COLOR = COLOR_GREEN;
+                LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                          &JIG_LED_COLOR);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             } else if(strcmp(cmd_buffer, "jig led red") == 0) {
                 memset(cmd_buffer, 0, 256);
                 if (TEST_LED_COLOR == COLOR_GREEN){
-                    LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_GREEN(test_status_led_gpio_handle.pGPIOx,
+                              test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &TEST_LED_COLOR);
                 } else if (TEST_LED_COLOR == COLOR_RED) {
-                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
+                } else if (TEST_LED_COLOR == COLOR_AMBER) {
+                    LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
                 } else if (TEST_LED_COLOR == COLOR_OFF) {
-                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
                 }
-                LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
-                JIG_LED_COLOR = COLOR_RED;
+                LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                        &JIG_LED_COLOR);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
-            } else if(strcmp(cmd_buffer, "jig led off") == 0) {
+            }
+
+            else if(strcmp(cmd_buffer, "jig led amber") == 0) {
                 memset(cmd_buffer, 0, 256);
                 if (TEST_LED_COLOR == COLOR_GREEN){
-                    LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_GREEN(test_status_led_gpio_handle.pGPIOx,
+                              test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &TEST_LED_COLOR);
                 } else if (TEST_LED_COLOR == COLOR_RED) {
-                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
+                } else if (TEST_LED_COLOR == COLOR_AMBER) {
+                    LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
                 } else if (TEST_LED_COLOR == COLOR_OFF) {
-                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
                 }
+                LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                        &JIG_LED_COLOR);
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
 
-                LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
-                JIG_LED_COLOR = COLOR_OFF;
+
+
+            else if(strcmp(cmd_buffer, "jig led off") == 0) {
+                memset(cmd_buffer, 0, 256);
+                if (TEST_LED_COLOR == COLOR_GREEN){
+                    LED_GREEN(test_status_led_gpio_handle.pGPIOx,
+                              test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &TEST_LED_COLOR);
+                } else if (TEST_LED_COLOR == COLOR_RED) {
+                    LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
+                } else if (TEST_LED_COLOR == COLOR_AMBER) {
+                    LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
+                } else if (TEST_LED_COLOR == COLOR_OFF) {
+                    LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                            &TEST_LED_COLOR);
+                }
+                LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
+                        &JIG_LED_COLOR);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
