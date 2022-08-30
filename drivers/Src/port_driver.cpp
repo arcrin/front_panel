@@ -78,7 +78,7 @@ void PORT_Init(PORT_Handle_t* pPortHandle){
 
     // Port pin MUX config
     pPortHandle->pPORT->PORT_PCR[pin_number] &= ~(0x7 << 8);
-    pPortHandle->pPORT->PORT_PCR[pin_number] |= pPortHandle->PORT_Config.PORT_Pin_Function << 8;
+    pPortHandle->pPORT->PORT_PCR[pin_number] |= (pPortHandle->PORT_Config.PORT_Pin_Function << 8);
 
     // Pull enable
     if (pPortHandle->PORT_Config.PORT_Pin_Pull_Enable == ENABLE){

@@ -342,6 +342,28 @@ typedef struct {
 #define TPM1_CLOCK_DI()     SIM->SIM_SCCGC6 &= ~(1 << 25)
 #define TPM2_CLOCK_DI()     SIM->SIM_SCCGC6 &= ~(1 << 26)
 
+/***************************************************
+ * RTC peripheral def
+ ***************************************************/
+#define RTC_BASEADDR        0x4003D000
+
+typedef struct {
+    _vo uint32_t TSR;
+    _vo uint32_t TPR;
+    _vo uint32_t TAR;
+    _vo uint32_t TCR;
+    _vo uint32_t CR;
+    _vo uint32_t SR;
+    _vo uint32_t LR;
+    _vo uint32_t IER;
+} RTC_Reg_Def_t, *pRTC_Reg_Def_t;
+
+#define RTC     ((pRTC_Reg_Def_t) RTC_BASEADDR)
+
+#define RTC_ENABLE()    SIM->SIM_SCGC6 |= (1 << 29)
+
+
+
 /******************************************
  * MCG peripheral def
  ******************************************/

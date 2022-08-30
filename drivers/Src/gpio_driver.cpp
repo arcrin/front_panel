@@ -12,7 +12,7 @@ void GPIO_Init(GPIO_Handle_t* pGPIOHandle){
         pGPIOHandle->pGPIOx->PDDR |= 0x1 << pin_number;
     }
     else if (pGPIOHandle->GPIO_Config.GPIO_PinDirection == GPIO_INPUT){
-        pGPIOHandle->pGPIOx->PDDR &= (0x1 << pin_number);
+        pGPIOHandle->pGPIOx->PDDR &= ~(0x1 << pin_number);
     }
 }
 

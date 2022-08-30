@@ -7,6 +7,9 @@
 PORT_Handle_t start_release_button_port_handle;
 GPIO_Handle_t start_release_button_gpio_handle;
 
+PORT_Handle_t latch_control_port_handle;
+GPIO_Handle_t latch_control_gpio_handle;
+
 PORT_Handle_t reseat_button_port_handle;
 GPIO_Handle_t reseat_button_gpio_handle;
 
@@ -14,23 +17,18 @@ PORT_Handle_t test_status_led_port_handle;
 GPIO_Handle_t test_status_led_gpio_handle;
 
 PORT_Handle_t act1_forward_control_port_handle;
-GPIO_Handle_t act1_forward_control_gpio_handle;
 
 PORT_Handle_t act1_reverse_control_port_handle;
-GPIO_Handle_t act1_reverse_control_gpio_handle;
 
 PORT_Handle_t act2_forward_control_port_handle;
-GPIO_Handle_t act2_forward_control_gpio_handle;
 
 PORT_Handle_t act2_reverse_control_port_handle;
-GPIO_Handle_t act2_reverse_control_gpio_handle;
-
 
 PORT_Handle_t lpuart_port_handle;
 LPUART_Handle_t lpuart_handle;
 
 PORT_Handle_t act1_feedback_adc_port_handle;
-ADC_Handle_t act1_feedback_adc_handle;
+ADC_Handle_t act_feedback_adc_handle;
 
 uint8_t TEST_LED_COLOR = COLOR_OFF;
 uint8_t JIG_LED_COLOR = COLOR_OFF;
@@ -38,8 +36,8 @@ uint8_t JIG_LED_COLOR = COLOR_OFF;
 uint8_t ACT1_STATUS = STOP;
 uint8_t ACT2_STATUS = STOP;
 
-uint8_t ACT1_SPEED = 0;
-uint8_t ACT2_SPEED = 0;
+uint8_t ACT_SPEED = 0;
+
 
 
 void FRONT_PANEL_TEST_STATUS_LED_INIT(){
@@ -74,6 +72,20 @@ void FRONT_PANEL_START_RELEASE_BUTTON_INIT(){
 
     IRQPriorityConfig(IRQ_NUMBER_PORTDC, 3);
     InterruptConfig(IRQ_NUMBER_PORTDC, ENABLE);
+}
+
+void FRONT_PANEL_LATCH_CONTROL_INIT(){
+    latch_control_port_handle.pPORT = PORTC;
+    latch_control_port_handle.PORT_Config.PORT_Pin_Number = 23;
+    latch_control_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
+    latch_control_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+    latch_control_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
+    PORT_Init(&latch_control_port_handle);
+
+    latch_control_gpio_handle.pGPIOx = GPIOC;
+    latch_control_gpio_handle.GPIO_Config.GPIO_PinNumber = 23;
+    latch_control_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_OUTPUT;
+    GPIO_Init(&latch_control_gpio_handle);
 }
 
 void FRONT_PANEL_RESEAT_BUTTON_INIT(){
@@ -168,45 +180,45 @@ void FRONT_PANEL_ADC0_INIT(){
     act1_feedback_adc_port_handle.PORT_Config.PORT_Pin_Number = 0;
     PORT_Init(&act1_feedback_adc_port_handle);
 
-    act1_feedback_adc_handle.pADCx = ADC0;
+    act_feedback_adc_handle.pADCx = ADC0;
     // CFG1
-    act1_feedback_adc_handle.LowPowerConfig = ADLPC_NORMAL;
-    act1_feedback_adc_handle.ClockDivideSelect = ADIV_2;
-    act1_feedback_adc_handle.SampleTimeConfig = ADLSMP_SHORT;
-    act1_feedback_adc_handle.ConversionModeSelect = MODE_16;
-    act1_feedback_adc_handle.InputClockSelect = ADICLK_BUS_2;
+    act_feedback_adc_handle.LowPowerConfig = ADLPC_NORMAL;
+    act_feedback_adc_handle.ClockDivideSelect = ADIV_2;
+    act_feedback_adc_handle.SampleTimeConfig = ADLSMP_SHORT;
+    act_feedback_adc_handle.ConversionModeSelect = MODE_16;
+    act_feedback_adc_handle.InputClockSelect = ADICLK_BUS_2;
 
     // CFG2
-    act1_feedback_adc_handle.AsyncClockOutputEnable = ADACKEN_DISABLED;
-    act1_feedback_adc_handle.HighSpeedConfig = ADHSC_HISPEED;
-    act1_feedback_adc_handle.LongSampleTimeSelect = ADLSTS_2;
+    act_feedback_adc_handle.AsyncClockOutputEnable = ADACKEN_DISABLED;
+    act_feedback_adc_handle.HighSpeedConfig = ADHSC_HISPEED;
+    act_feedback_adc_handle.LongSampleTimeSelect = ADLSTS_2;
 
     // SC2
-    act1_feedback_adc_handle.CompareFunctionEnable = ACFE_DISABLED;
-    act1_feedback_adc_handle.ConversionTriggerSelect = ADTRG_SW;
-    act1_feedback_adc_handle.CompareFunctionGTEnable = ACFGT_GREATER;
-    act1_feedback_adc_handle.CompareFunctionRangeEnable = ACREN_DISABLED;
-    act1_feedback_adc_handle.VoltageRefSelect = REFSEL_EXT;
+    act_feedback_adc_handle.CompareFunctionEnable = ACFE_DISABLED;
+    act_feedback_adc_handle.ConversionTriggerSelect = ADTRG_SW;
+    act_feedback_adc_handle.CompareFunctionGTEnable = ACFGT_GREATER;
+    act_feedback_adc_handle.CompareFunctionRangeEnable = ACREN_DISABLED;
+    act_feedback_adc_handle.VoltageRefSelect = REFSEL_EXT;
 
     // SC3
-    act1_feedback_adc_handle.ContinuousConversionEnable = ADCO_SINGLE;
-    act1_feedback_adc_handle.HardwareAverageEnable = AVGE_DISABLED;
-    act1_feedback_adc_handle.HardwareAverageSelect = AVGS_32;
+    act_feedback_adc_handle.ContinuousConversionEnable = ADCO_SINGLE;
+    act_feedback_adc_handle.HardwareAverageEnable = AVGE_DISABLED;
+    act_feedback_adc_handle.HardwareAverageSelect = AVGS_32;
 
     // SC1A
-    act1_feedback_adc_handle.InterruptControlA = AIEN_OFF;
-    act1_feedback_adc_handle.DifferentialModeA = DIFF_SINGLE;
-    act1_feedback_adc_handle.InputChannelA = AD8;
+    act_feedback_adc_handle.InterruptControlA = AIEN_OFF;
+    act_feedback_adc_handle.DifferentialModeA = DIFF_SINGLE;
+    act_feedback_adc_handle.InputChannelA = 0x1F;
 
     // SC1B
-    act1_feedback_adc_handle.InterruptControlB = AIEN_OFF;
-    act1_feedback_adc_handle.DifferentialModeB = DIFF_SINGLE;
-    act1_feedback_adc_handle.InputChannelB = 0x1F;
+    act_feedback_adc_handle.InterruptControlB = AIEN_OFF;
+    act_feedback_adc_handle.DifferentialModeB = DIFF_SINGLE;
+    act_feedback_adc_handle.InputChannelB = 0x1F;
 
     // CV
-    act1_feedback_adc_handle.CompareValue = 0x7FFF;
+    act_feedback_adc_handle.CompareValue = 0x7FFF;
 
-    ADC_Init(&act1_feedback_adc_handle);
+    ADC_Init(&act_feedback_adc_handle);
 }
 
 void FRONT_PANEL_ACT1_FORWARD(uint8_t speed){
@@ -247,7 +259,7 @@ void FRONT_PANEL_ACT1_STOP(){
 }
 
 
-void FRONT_PANEL_ACT2_FORWARD(uint8_t speed){
+void FRONT_PANEL_ACT2_REVERSE(uint8_t speed){
     TPM2->SC &= ~(0x3 << TPM_SC_CMOD); // Disable TPM counter, this is universal for the entire TMP1 module
     uint16_t max_speed = TPM2->MOD;
     TPM2->CNT = 0xFFFF; // clear Counter register to avoid confusion of cycle start
@@ -258,12 +270,12 @@ void FRONT_PANEL_ACT2_FORWARD(uint8_t speed){
     // backward control channel stays low
     TPM2->C1V = (uint16_t) 0x0;
 
-    ACT1_STATUS = FORWARD;
+    ACT2_STATUS = REVERSE;
 
     TPM2->SC |= (0x1 << TPM_SC_CMOD); // enable TPM counter
 }
 
-void FRONT_PANEL_ACT2_REVERSE(uint8_t speed){
+void FRONT_PANEL_ACT2_FORWARD(uint8_t speed){
     TPM2->SC &= ~(0x3 << TPM_SC_CMOD); // Disable TPM counter, this is universal for the entire TMP1 module
     uint16_t max_speed = TPM2->MOD;
     TPM2->CNT = 0xFFFF; // clear Counter register to avoid confusion of cycle start
@@ -274,12 +286,12 @@ void FRONT_PANEL_ACT2_REVERSE(uint8_t speed){
     // backward control channel stays low
     TPM2->C0V = (uint16_t) 0x0;
 
-    ACT1_STATUS = REVERSE;
+    ACT2_STATUS = FORWARD;
 
     TPM2->SC |= (0x1 << TPM_SC_CMOD); // enable TPM counter
 }
 
 void FRONT_PANEL_ACT2_STOP(){
     TPM2->SC &= ~(0x3 << TPM_SC_CMOD);
-    ACT1_STATUS = STOP;
+    ACT2_STATUS = STOP;
 }

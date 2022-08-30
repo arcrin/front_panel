@@ -16,11 +16,19 @@
 #define FORWARD     1
 #define REVERSE     2
 
+/**********************************
+ * JIG Status
+ **********************************/
+#define READY       0
+#define BUSY        1
+
 void FRONT_PANEL_TEST_STATUS_LED_INIT();
 
 void FRONT_PANEL_START_RELEASE_BUTTON_INIT();
 
 void FRONT_PANEL_RESEAT_BUTTON_INIT();
+
+void FRONT_PANEL_LATCH_CONTROL_INIT();
 
 void FRONT_PANEL_ACT1_CONTROL_INIT();
 

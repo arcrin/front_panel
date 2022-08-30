@@ -23,26 +23,14 @@ int main(){
     test_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_OUTPUT;
     GPIO_Init(&test_gpio_handle);
 
-//    LPTMR_Init();
-//    LPTMR->CMR = 0x1;
+    LPTMR_Init();
+    LPTMR->CMR = 0x1;
 
 //    IRQPriorityConfig(IRQ_NUMBER_LPTMR0, 3);
 //    InterruptConfig(IRQ_NUMBER_LPTMR0, ENABLE);
 
     SysTick_Init(480);
     ENABLE_IRQ();
-    LED_OFF(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-    LED_OFF(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-    delay(10);
-    LED_OFF(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-    LED_OFF(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-//    LED_GREEN(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-//    LED_GREEN(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-//    LED_RED(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-//    LED_RED(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-//    LED_BLUE(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-//    LED_BLUE(test_gpio_handle.pGPIOx, test_gpio_handle.GPIO_Config.GPIO_PinNumber);
-
 
     while(1);
 }
