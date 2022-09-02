@@ -142,6 +142,7 @@ const struct Flash_Configuration_Field my_config =
 
 void Default_Handler(void)
 {
+
     while(1);
 }
 

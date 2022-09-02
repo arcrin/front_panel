@@ -123,15 +123,15 @@ void LED_AMBER(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name){
     code0(pGPIOx, pin_number);
     code1(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
-    code0(pGPIOx, pin_number);
+    code1(pGPIOx, pin_number);
 
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
+    code0(pGPIOx, pin_number);
     code1(pGPIOx, pin_number);
-    code0(pGPIOx, pin_number);
-    code0(pGPIOx, pin_number);
-    code0(pGPIOx, pin_number);
+    code1(pGPIOx, pin_number);
+    code1(pGPIOx, pin_number);
     code0(pGPIOx, pin_number);
 
     code0(pGPIOx, pin_number);

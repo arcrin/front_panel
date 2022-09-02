@@ -21,12 +21,16 @@
 /*************************************
  * PSR bit config
  *************************************/
-#define LPTMR_PSR_PRESCAKE      3
+#define LPTMR_PSR_PRESCALE      3
 #define LPTMR_PSR_PBYP          2
 #define LPTMR_PSR_PCS           0
 
 void LPTMR_Init();
 
 void LPTMR_Delay(uint16_t counter);
+
+void LPTMR_IRQHandling();
+
+uint32_t LPTMR_SECONDS();
 
 #endif //FRONT_PANEL_LPTMR_DRIVER_H

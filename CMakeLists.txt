@@ -44,7 +44,7 @@ set(PROJECT_FILES
 #        modules/ImageData.cpp
         modules/Inc/epaper_front_panel.h
         modules/Src/epaper_front_panel.cpp
-        Src/front_panel_controller.cpp
+        Src/exp8_i2c_master_rx_it.cpp
         startup.c
         )
 

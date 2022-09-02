@@ -16,6 +16,12 @@
 #define COLOR_BLUE        3
 #define COLOR_AMBER       4
 
+/******************************
+ * LED Status
+ ******************************/
+#define SOLID       0
+#define BLINK       1
+
 void LED_GREEN(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name);
 
 void LED_RED(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name);

@@ -4,6 +4,7 @@
 
 #include "k32lb11.h"
 
+
 void TPM1_Init(){
     TPM1_CLOCK_EN();
     SIM->SIM_SOPT2 |= (0x3 << 24);

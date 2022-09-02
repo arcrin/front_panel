@@ -17,9 +17,9 @@ int main(){
     MCG_Init();
     MCG->MC |= (1 << 7);
     SysTick_Init(480); // 10 us delay
-    TEST_STATUS_LED_INIT();
-    START_RELEASE_BUTTON_INIT();
-    RESEAT_BUTTON_INIT();
+    FRONT_PANEL_TEST_STATUS_LED_INIT();
+    FRONT_PANEL_START_RELEASE_BUTTON_INIT();
+    FRONT_PANEL_RESEAT_BUTTON_INIT();
     ENABLE_IRQ();
     while(1);
 }
@@ -28,12 +28,10 @@ extern "C"{
     void PortCD_SingleInterrupt_Handler(){
         if (PORTC->PORT_PCR[4] & (1 << 24)) {
             PORT_IRQHandling(PORTC, 4);
-            LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
-            LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+            FRONT_PANEL_JIG_LED_GREEN();
         } else if (PORTC->PORT_PCR[21] & (1 << 24)) {
             PORT_IRQHandling(PORTC, 21);
-            LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
-            LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber);
+            FRONT_PANEL_JIG_LED_OFF();
         }
     }
 }
