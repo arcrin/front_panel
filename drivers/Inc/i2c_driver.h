@@ -109,8 +109,14 @@ typedef struct {
  ********************************/
 #define I2C_EV_DATA_SEND        1
 #define I2C_EV_DATA_RCV         2
+#define I2C_EV_DATA_STOP        3
 
-
+/********************************
+ * I2C data type
+ ********************************/
+#define I2C_COMMAND             1
+#define I2C_DISPLAY_DATA        2
+#define I2C_PARAMETER           3
 
 /***************************
  * API

@@ -38,13 +38,13 @@ set(PROJECT_FILES
 #        modules/fonts/font16.cpp
 #        modules/fonts/font20.cpp
 #        modules/fonts/font24.cpp
-#        modules/GUI_Paint.h
-#        modules/GUI_Paint.cpp
+        modules/Inc/GUI_Paint.h
+        modules/Src/GUI_Paint.cpp
 #        modules/ImageData.h
 #        modules/ImageData.cpp
         modules/Inc/epaper_front_panel.h
         modules/Src/epaper_front_panel.cpp
-        Src/exp8_i2c_master_rx_it.cpp
+        Src/front_panel_controller.cpp
         startup.c
         )
 
@@ -57,7 +57,8 @@ target_include_directories(${EXECUTABLE} PRIVATE
         drivers/Inc
         drivers/Src
         modules
-        modules/fonts)
+        modules/Inc
+        modules/Src)
 
 set(MACH cortex-m0plus)
 

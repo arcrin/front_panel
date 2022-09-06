@@ -18,7 +18,7 @@ extern const unsigned char label_image[];
 int main(){
     DISABLE_IRQ();
     MCG_Init();
-    SysTick_Init(8000);// millisecond delay
+    SysTick_Init(48000);// millisecond delay
     EPD_GPIO_Init();
     EPD_SPI_Init();
     RESET_INTERRUPT();
@@ -41,7 +41,8 @@ int main(){
         Paint_NewImage(BlackImage, EPD_2IN66B_WIDTH, EPD_2IN66B_HEIGHT, 270, WHITE);
     //    Paint_Clear(WHITE);
         Paint_NewImage(RedImage, EPD_2IN66B_WIDTH, EPD_2IN66B_HEIGHT, 270, WHITE);
-    //    Paint_Clear(WHITE);
+        Paint_Clear(WHITE);
+        EPD_2IN66B_Clear();
     #if 0
         //show image for array
         Paint_SelectImage(BlackImage);
@@ -79,7 +80,7 @@ int main(){
     #endif
 
 
-    #if 1
+    #if 0
         Paint_SelectImage(RedImage);
         Paint_Clear(WHITE);
         EPD_2IN66B_Display((uint8_t*)&label_image, RedImage);

@@ -473,6 +473,7 @@ void delay_no_block(uint8_t delay_in_ms);
 #include "tpm_driver.h"
 #include "Inc/led_control.h"
 #include "Inc/front_panel_peripheral.h"
-
+#include "Inc/epaper_front_panel.h"
+#include "Inc/GUI_Paint.h"
 #endif //FRONT_PANEL_K32LB3X_H
 

@@ -7,7 +7,7 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include "fonts.h"
+//#include "fonts.h"
 
 /*
  * Image attributes
@@ -51,7 +51,7 @@ typedef enum{
  */
 #define WHITE       0xFF // turn on pixel
 #define BLACK       0x00 // turn off pixel
-#define COLOR_RED         BLACK
+#define RED         BLACK
 
 #define IMAGE_BACKGROUND    WHITE
 #define FONT_FOREGROUND     BLACK
@@ -157,17 +157,17 @@ void Paint_DrawCircle(uint16_t X_Center, uint16_t Y_Center, uint16_t Radius, uin
 
 
 // Display string
-void Paint_DrawChar(uint16_t Xpoint, uint16_t Ypoint, const char Ascii_Char, sFONT *Font, uint16_t Color_Foreground,
-                    uint16_t Color_Background);
-
-void Paint_DrawString_EN(uint16_t Xstart, uint16_t Ystart, const char *pString, sFONT *Font, uint16_t Color_Foreground,
-                         uint16_t Color_background);
-
-void Paint_DrawNum(uint16_t Xpoint, uint16_t Ypoint, int32_t Number, sFONT *Font, uint16_t Color_Foreground,
-                   uint16_t Color_Background);
-
-void Paint_DrawTime(uint16_t Xstart, uint16_t Ystart, PAINT_TIME *pTime, sFONT *Font, uint16_t Color_Foreground,
-                    uint16_t Color_Background);
+//void Paint_DrawChar(uint16_t Xpoint, uint16_t Ypoint, const char Ascii_Char, sFONT *Font, uint16_t Color_Foreground,
+//                    uint16_t Color_Background);
+//
+//void Paint_DrawString_EN(uint16_t Xstart, uint16_t Ystart, const char *pString, sFONT *Font, uint16_t Color_Foreground,
+//                         uint16_t Color_background);
+//
+//void Paint_DrawNum(uint16_t Xpoint, uint16_t Ypoint, int32_t Number, sFONT *Font, uint16_t Color_Foreground,
+//                   uint16_t Color_Background);
+//
+//void Paint_DrawTime(uint16_t Xstart, uint16_t Ystart, PAINT_TIME *pTime, sFONT *Font, uint16_t Color_Foreground,
+//                    uint16_t Color_Background);
 
 // pic
 void Paint_DrawBitMap(const unsigned char *image_buffer);

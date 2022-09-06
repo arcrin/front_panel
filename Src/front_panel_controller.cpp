@@ -2,11 +2,15 @@
 // Created by andy- on 2022-08-17.
 //
 #include "Inc/front_panel_peripheral.h"
+#include <cstdint>
+#include <cstdlib>
 
 char display_buffer[15] = "Front Panel->";
 char empty_buffer[256] = "                                                   ";
 char wrong_cmd_buffer[19] = "\ncmd not supported";
 char firmware_info_buffer[5] = "\n0.0";
+//unsigned char label_image[5625];
+
 char cmd_buffer[256];
 char byte_buffer[1];
 
@@ -29,6 +33,10 @@ extern GPIO_Handle_t latch_control_gpio_handle;
 
 extern GPIO_Handle_t master_relay_gpio_handle;
 
+extern GPIO_Handle_t limit_switch_feedback_gpio_handle;
+
+extern GPIO_Handle_t dut_power_control_gpio_handle;
+
 extern uint8_t TEST_LED_COLOR;
 extern uint8_t JIG_LED_COLOR;
 
@@ -45,11 +53,46 @@ extern uint8_t ACT2_STATUS;
 
 extern uint8_t ACT_SPEED;
 
+extern I2C_Handle_t i2c0_handle;
+
+uint8_t i2c_command_code;
+
+uint8_t i2c_tx_buffer[] = "HiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHi...123A";
+
+uint8_t i2c_tx_data_len = 0;
+
+uint8_t i2c_data_type = I2C_COMMAND;
+
+uint32_t i2c_rgb_parameters = 0x0;
+
+uint8_t label_image[5625];
+uint32_t label_image_buffer_count = 0;
+
 uint8_t JIG_STATUS;
 
 
 uint32_t get_tenth_seconds(){
     return tenth_seconds;
+}
+
+void latch_on(){
+    GPIO_WriteOutputPin(latch_control_gpio_handle.pGPIOx,
+                        latch_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+}
+
+void latch_off(){
+    GPIO_WriteOutputPin(latch_control_gpio_handle.pGPIOx,
+                        latch_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
+}
+
+void master_relay_on() {
+    GPIO_WriteOutputPin(master_relay_gpio_handle.pGPIOx,
+                        master_relay_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+}
+
+void master_relay_off() {
+    GPIO_WriteOutputPin(master_relay_gpio_handle.pGPIOx,
+                        master_relay_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
 }
 
 int main(){
@@ -67,20 +110,42 @@ int main(){
     FRONT_PANEL_LPUART_INIT();
     FRONT_PANEL_ADC0_INIT();
     FRONT_PANEL_BUTTON_RGB_INIT();
+    FRONT_PANEL_I2C_INT();
     LPTMR_Init();
+//    EPD_GPIO_Init();
+//    EPD_SPI_Init();
+    RESET_INTERRUPT();
     ENABLE_IRQ();
     JIG_STATUS = READY;
-    GPIO_WriteOutputPin(latch_control_gpio_handle.pGPIOx,
-                        latch_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
 
-    GPIO_WriteOutputPin(master_relay_gpio_handle.pGPIOx,
-                        master_relay_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+    latch_on();
+    master_relay_on();
 
     ACT1_STATUS = REVERSE;
     ACT2_STATUS = REVERSE;
     ACT_SPEED = 100;
     FRONT_PANEL_JIG_LED_OFF();
     FRONT_PANEL_TEST_LED_OFF();
+
+//    EPD_2IN66_Init();
+//    EPD_2IN66B_Clear();
+
+//    uint8_t *BWImage, *RedImage;
+//
+//    uint16_t Imagesize =
+//            ((EPD_2IN66B_WIDTH % 8 == 0) ? (EPD_2IN66B_WIDTH / 8) : (EPD_2IN66B_WIDTH / 8 + 1)) * EPD_2IN66B_HEIGHT;
+//    if ((BWImage = (uint8_t *) malloc(Imagesize)) == NULL) {
+//        return -1;
+//    }
+//    if ((RedImage = (uint8_t *) malloc(Imagesize)) == NULL) {
+//        return -1;
+//    }
+//    Paint_NewImage(BWImage, EPD_2IN66B_WIDTH, EPD_2IN66B_HEIGHT, 270, WHITE);
+//    Paint_NewImage(RedImage, EPD_2IN66B_WIDTH, EPD_2IN66B_HEIGHT, 270, WHITE);
+//    Paint_Clear(WHITE);
+//    EPD_2IN66B_Display(BWImage, RedImage);
+//    delay(15000000);
+//    EPD_2IN66B_Sleep();
     while (1){
         if(ACT1_STATUS == FORWARD){
             FRONT_PANEL_ACT1_FORWARD(ACT_SPEED);
@@ -116,17 +181,43 @@ int main(){
             }
         }
 
-        if (TEST_LED_STATUS == BLINK) {
+        if (TEST_LED_STATUS == BLINK_AMBER) {
             if ((get_tenth_seconds() - test_led_time_stamp) >= 3) {
                 FRONT_PANEL_TEST_LED_BLINK_AMBER();
                 test_led_time_stamp = get_tenth_seconds();
             }
         }
 
-        if (JIG_LED_STATUS == BLINK) {
+        if (JIG_LED_STATUS == BLINK_AMBER) {
             if ((get_tenth_seconds() - jig_led_time_stamp) >= 3) {
                 FRONT_PANEL_JIG_LED_BLINK_AMBER();
                 jig_led_time_stamp = get_tenth_seconds();
+            }
+        }
+
+        if (TEST_LED_STATUS == BLINK_RED) {
+            if ((get_tenth_seconds() - test_led_time_stamp) >= 3) {
+                FRONT_PANEL_TEST_LED_BLINK_RED();
+                test_led_time_stamp = get_tenth_seconds();
+            }
+        }
+
+        if (JIG_LED_STATUS == BLINK_RED) {
+            if ((get_tenth_seconds() - jig_led_time_stamp) >= 3) {
+                FRONT_PANEL_JIG_LED_BLINK_RED();
+                jig_led_time_stamp = get_tenth_seconds();
+            }
+        }
+
+        if (((i2c_rgb_parameters & 0xf0000) >> 16) == 0xf) {
+            if (JIG_LED_COLOR != LED_COLOR_RED) {
+                FRONT_PANEL_JIG_LED_RED();
+            }
+        }
+
+        if (((i2c_rgb_parameters & 0xf000) >> 12) == 0xf) {
+            if (JIG_LED_COLOR != LED_COLOR_GREEN) {
+                FRONT_PANEL_JIG_LED_GREEN();
             }
         }
     }
@@ -224,9 +315,16 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
-            else if(strcmp(cmd_buffer, "test led blink") == 0) {
+            else if(strcmp(cmd_buffer, "test led blink amber") == 0) {
                 memset(cmd_buffer, 0, 256);
-                TEST_LED_STATUS = BLINK;
+                TEST_LED_STATUS = BLINK_AMBER;
+                test_led_time_stamp = get_tenth_seconds();
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
+            else if(strcmp(cmd_buffer, "test led blink red") == 0) {
+                memset(cmd_buffer, 0, 256);
+                TEST_LED_STATUS = BLINK_RED;
                 test_led_time_stamp = get_tenth_seconds();
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
@@ -259,9 +357,16 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
-            else if(strcmp(cmd_buffer, "jig led blink") == 0) {
+            else if(strcmp(cmd_buffer, "jig led blink amber") == 0) {
                 memset(cmd_buffer, 0, 256);
-                JIG_LED_STATUS = BLINK;
+                JIG_LED_STATUS = BLINK_AMBER;
+                jig_led_time_stamp = get_tenth_seconds();
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
+            else if(strcmp(cmd_buffer, "jig led blink red") == 0) {
+                memset(cmd_buffer, 0, 256);
+                JIG_LED_STATUS = BLINK_RED;
                 jig_led_time_stamp = get_tenth_seconds();
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
@@ -327,31 +432,31 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
             }
             else if(strcmp(cmd_buffer, "button red") == 0) {
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(COLOR_RED);
+                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_RED);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "button green") == 0) {
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(COLOR_GREEN);
+                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_GREEN);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "button blue") == 0) {
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(COLOR_BLUE);
+                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_BLUE);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "button amber") == 0) {
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(COLOR_AMBER);
+                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_AMBER);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "button off") == 0) {
                 memset(cmd_buffer, 0, 256);
-                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(COLOR_OFF);
+                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_OFF);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
@@ -394,23 +499,23 @@ extern "C"{
             if ((GPIOC->PDIR & 0x10) >> 4 == 1) {
                 start_release_button_time_stamp = get_tenth_seconds();
                 LPUART_SendData(&lpuart_handle, (uint8_t *) button_pressed_message, 16);
-                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(COLOR_RED);
+                FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_RED);
 
             } else if(((GPIOC->PDIR & 0x10)) >> 4 == 0){
                 if((get_tenth_seconds() - start_release_button_time_stamp) <= 10) {
                     LPUART_SendData(&lpuart_handle, (uint8_t *) button_short_released_message, 16);
-                    FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(COLOR_GREEN);
+                    FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_GREEN);
                     ACT1_STATUS = FORWARD;
                     ACT2_STATUS = FORWARD;
                     ACT_SPEED = 100;
-                    JIG_LED_STATUS = BLINK;
+                    JIG_LED_STATUS = BLINK_AMBER;
                 } else {
                     LPUART_SendData(&lpuart_handle, (uint8_t *) button_long_released_message, 15);
-                    FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(COLOR_AMBER);
+                    FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_AMBER);
                     ACT1_STATUS = REVERSE;
                     ACT2_STATUS = REVERSE;
                     ACT_SPEED = 100;
-                    JIG_LED_STATUS = BLINK;
+                    JIG_LED_STATUS = BLINK_AMBER;
                 }
 
             }
@@ -422,6 +527,75 @@ extern "C"{
                 FRONT_PANEL_ACT1_STOP();
                 FRONT_PANEL_ACT2_STOP();
             }
+        }
+    }
+}
+
+extern "C" {
+    void I2C0_Handler(){
+        I2C_IRQHandling(&i2c0_handle);
+    }
+}
+
+void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t app_event){
+    static uint32_t count = 0;
+    static uint32_t word_pointer = 0;
+    uint8_t temp;
+    if (app_event == I2C_EV_DATA_STOP) {
+        i2c_data_type = I2C_COMMAND;
+    }
+    if (app_event == I2C_EV_DATA_RCV) {
+        if (i2c_data_type == I2C_COMMAND) {
+            i2c_command_code = I2C_SlaveReceiveData(pI2CHandle->pI2Cx);
+            if (i2c_command_code == 0x3) {
+                ACT1_STATUS = FORWARD;
+                ACT2_STATUS = FORWARD;
+                ACT_SPEED = 100;
+                JIG_LED_STATUS = BLINK_AMBER;
+            } else if (i2c_command_code == 0x4) {
+                ACT1_STATUS = REVERSE;
+                ACT2_STATUS = REVERSE;
+                ACT_SPEED = 100;
+                JIG_LED_STATUS = BLINK_AMBER;
+            } else if (i2c_command_code == 0x6) {
+                i2c_data_type = I2C_PARAMETER;
+            }
+        }
+        else if (i2c_data_type == I2C_PARAMETER) {
+            if (i2c_command_code == 0x6) {
+                i2c_rgb_parameters |= I2C_SlaveReceiveData(pI2CHandle->pI2Cx);
+                i2c_rgb_parameters = i2c_rgb_parameters << 4;
+            }
+        }
+
+        else if (i2c_data_type == I2C_DISPLAY_DATA) {
+            // note: DAQ is sending an extra character each time, need to investigate
+            if (label_image_buffer_count <= (sizeof(label_image) * 2)) {
+                label_image[label_image_buffer_count / 2] = I2C_SlaveReceiveData(pI2CHandle->pI2Cx);
+                label_image_buffer_count++;
+            }
+            if (label_image_buffer_count == (sizeof(label_image) * 2)) {
+                label_image_buffer_count = 0;
+                i2c_data_type = I2C_COMMAND;
+            }
+        }
+    }
+
+    if (app_event == I2C_EV_DATA_SEND) {
+        if (i2c_command_code == 0x53) {
+            I2C_SlaveSendData(pI2CHandle->pI2Cx, ((sizeof(i2c_tx_buffer) >> (count % 2) * 8)) & 0xff);
+            count++;
+        }
+        else if (i2c_command_code == 0x52) {
+            I2C_SlaveSendData(pI2CHandle->pI2Cx, i2c_tx_buffer[word_pointer++]);
+        }
+        else if (i2c_command_code == 0x51) {
+            count = 0;
+            word_pointer = 0;
+            I2C_SlaveSendData(pI2CHandle->pI2Cx, 0x51);
+        } else if (i2c_command_code == 0x1) {
+            i2c_data_type = I2C_DISPLAY_DATA;
+            I2C_SlaveSendData(pI2CHandle->pI2Cx, i2c_command_code);
         }
     }
 }

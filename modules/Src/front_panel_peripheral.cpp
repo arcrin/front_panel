@@ -13,6 +13,12 @@ GPIO_Handle_t latch_control_gpio_handle;
 PORT_Handle_t master_relay_port_handle;
 GPIO_Handle_t master_relay_gpio_handle;
 
+PORT_Handle_t limit_switch_feedback_port_handle;
+GPIO_Handle_t limit_switch_feedback_gpio_handle;
+
+PORT_Handle_t dut_power_control_port_handle;
+GPIO_Handle_t dut_power_control_gpio_handle;
+
 PORT_Handle_t reseat_button_port_handle;
 GPIO_Handle_t reseat_button_gpio_handle;
 
@@ -33,8 +39,8 @@ LPUART_Handle_t lpuart_handle;
 PORT_Handle_t act1_feedback_adc_port_handle;
 ADC_Handle_t act_feedback_adc_handle;
 
-uint8_t TEST_LED_COLOR = COLOR_OFF;
-uint8_t JIG_LED_COLOR = COLOR_OFF;
+uint8_t TEST_LED_COLOR = LED_COLOR_OFF;
+uint8_t JIG_LED_COLOR = LED_COLOR_OFF;
 
 uint8_t TEST_LED_STATUS = SOLID;
 uint8_t JIG_LED_STATUS = SOLID;
@@ -51,6 +57,8 @@ GPIO_Handle_t start_release_button_green_gpio_handle;
 PORT_Handle_t start_release_button_blue_port_handle;
 GPIO_Handle_t start_release_button_blue_gpio_handle;
 
+PORT_Handle_t i2c0_port_handle;
+I2C_Handle_t i2c0_handle;
 
 uint8_t ACT_SPEED = 0;
 
@@ -328,16 +336,16 @@ void FRONT_PANEL_ACT2_STOP(){
 void FRONT_PANEL_TEST_LED_GREEN(){
     LED_GREEN(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
               &TEST_LED_COLOR);
-    if (JIG_LED_COLOR == COLOR_GREEN){
+    if (JIG_LED_COLOR == LED_COLOR_GREEN){
         LED_GREEN(test_status_led_gpio_handle.pGPIOx,
                   test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_RED) {
+    } else if (JIG_LED_COLOR == LED_COLOR_RED) {
         LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_AMBER) {
+    } else if (JIG_LED_COLOR == LED_COLOR_AMBER) {
         LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_OFF) {
+    } else if (JIG_LED_COLOR == LED_COLOR_OFF) {
         LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &JIG_LED_COLOR);
     }
@@ -346,16 +354,16 @@ void FRONT_PANEL_TEST_LED_GREEN(){
 void FRONT_PANEL_TEST_LED_RED(){
     LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
             &TEST_LED_COLOR);
-    if (JIG_LED_COLOR == COLOR_GREEN){
+    if (JIG_LED_COLOR == LED_COLOR_GREEN){
         LED_GREEN(test_status_led_gpio_handle.pGPIOx,
                   test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_RED) {
+    } else if (JIG_LED_COLOR == LED_COLOR_RED) {
         LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_AMBER) {
+    } else if (JIG_LED_COLOR == LED_COLOR_AMBER) {
         LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                   &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_OFF) {
+    } else if (JIG_LED_COLOR == LED_COLOR_OFF) {
         LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &JIG_LED_COLOR);
     }
@@ -364,58 +372,67 @@ void FRONT_PANEL_TEST_LED_RED(){
 void FRONT_PANEL_TEST_LED_AMBER(){
     LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
               &TEST_LED_COLOR);
-    if (JIG_LED_COLOR == COLOR_GREEN){
+    if (JIG_LED_COLOR == LED_COLOR_GREEN){
         LED_GREEN(test_status_led_gpio_handle.pGPIOx,
                   test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_RED) {
+    } else if (JIG_LED_COLOR == LED_COLOR_RED) {
         LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_AMBER) {
+    } else if (JIG_LED_COLOR == LED_COLOR_AMBER) {
         LED_AMBER(test_status_led_gpio_handle.pGPIOx,
                   test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_OFF) {
+    } else if (JIG_LED_COLOR == LED_COLOR_OFF) {
         LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &JIG_LED_COLOR);
     }
 }
 
 void FRONT_PANEL_TEST_LED_BLINK_AMBER(){
-    if (TEST_LED_COLOR != COLOR_AMBER){
+    if (TEST_LED_COLOR != LED_COLOR_AMBER){
         FRONT_PANEL_TEST_LED_AMBER();
-    } else if (TEST_LED_COLOR == COLOR_AMBER) {
+    } else if (TEST_LED_COLOR == LED_COLOR_AMBER) {
         FRONT_PANEL_TEST_LED_OFF();
     }
 }
 
+void FRONT_PANEL_TEST_LED_BLINK_RED(){
+    if (TEST_LED_COLOR != LED_COLOR_RED){
+        FRONT_PANEL_TEST_LED_RED();
+    } else if (TEST_LED_COLOR == LED_COLOR_RED) {
+        FRONT_PANEL_TEST_LED_OFF();
+    }
+}
+
+
 void FRONT_PANEL_TEST_LED_OFF(){
     LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
             &TEST_LED_COLOR);
-    if (JIG_LED_COLOR == COLOR_GREEN){
+    if (JIG_LED_COLOR == LED_COLOR_GREEN){
         LED_GREEN(test_status_led_gpio_handle.pGPIOx,
                   test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_RED) {
+    } else if (JIG_LED_COLOR == LED_COLOR_RED) {
         LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &JIG_LED_COLOR);
-    }  else if (JIG_LED_COLOR == COLOR_AMBER) {
+    }  else if (JIG_LED_COLOR == LED_COLOR_AMBER) {
         LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                   &JIG_LED_COLOR);
-    } else if (JIG_LED_COLOR == COLOR_OFF) {
+    } else if (JIG_LED_COLOR == LED_COLOR_OFF) {
         LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &JIG_LED_COLOR);
     }
 }
 
 void FRONT_PANEL_JIG_LED_GREEN(){
-    if (TEST_LED_COLOR == COLOR_GREEN){
+    if (TEST_LED_COLOR == LED_COLOR_GREEN){
         LED_GREEN(test_status_led_gpio_handle.pGPIOx,
                   test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_RED) {
+    } else if (TEST_LED_COLOR == LED_COLOR_RED) {
         LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_AMBER) {
+    } else if (TEST_LED_COLOR == LED_COLOR_AMBER) {
         LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                   &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_OFF) {
+    } else if (TEST_LED_COLOR == LED_COLOR_OFF) {
         LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &TEST_LED_COLOR);
     }
@@ -424,16 +441,16 @@ void FRONT_PANEL_JIG_LED_GREEN(){
 }
 
 void FRONT_PANEL_JIG_LED_RED(){
-    if (TEST_LED_COLOR == COLOR_GREEN){
+    if (TEST_LED_COLOR == LED_COLOR_GREEN){
         LED_GREEN(test_status_led_gpio_handle.pGPIOx,
                   test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_RED) {
+    } else if (TEST_LED_COLOR == LED_COLOR_RED) {
         LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_AMBER) {
+    } else if (TEST_LED_COLOR == LED_COLOR_AMBER) {
         LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                   &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_OFF) {
+    } else if (TEST_LED_COLOR == LED_COLOR_OFF) {
         LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &TEST_LED_COLOR);
     }
@@ -442,16 +459,16 @@ void FRONT_PANEL_JIG_LED_RED(){
 }
 
 void FRONT_PANEL_JIG_LED_AMBER(){
-    if (TEST_LED_COLOR == COLOR_GREEN){
+    if (TEST_LED_COLOR == LED_COLOR_GREEN){
         LED_GREEN(test_status_led_gpio_handle.pGPIOx,
                   test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_RED) {
+    } else if (TEST_LED_COLOR == LED_COLOR_RED) {
         LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_AMBER) {
+    } else if (TEST_LED_COLOR == LED_COLOR_AMBER) {
         LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                   &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_OFF) {
+    } else if (TEST_LED_COLOR == LED_COLOR_OFF) {
         LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &TEST_LED_COLOR);
     }
@@ -460,24 +477,32 @@ void FRONT_PANEL_JIG_LED_AMBER(){
 }
 
 void FRONT_PANEL_JIG_LED_BLINK_AMBER(){
-    if (JIG_LED_COLOR != COLOR_AMBER){
+    if (JIG_LED_COLOR != LED_COLOR_AMBER){
         FRONT_PANEL_JIG_LED_AMBER();
-    } else if (JIG_LED_COLOR == COLOR_AMBER) {
+    } else if (JIG_LED_COLOR == LED_COLOR_AMBER) {
+        FRONT_PANEL_JIG_LED_OFF();
+    }
+}
+
+void FRONT_PANEL_JIG_LED_BLINK_RED(){
+    if (JIG_LED_COLOR != LED_COLOR_RED){
+        FRONT_PANEL_JIG_LED_RED();
+    } else if (JIG_LED_COLOR == LED_COLOR_RED) {
         FRONT_PANEL_JIG_LED_OFF();
     }
 }
 
 void FRONT_PANEL_JIG_LED_OFF(){
-    if (TEST_LED_COLOR == COLOR_GREEN){
+    if (TEST_LED_COLOR == LED_COLOR_GREEN){
         LED_GREEN(test_status_led_gpio_handle.pGPIOx,
                   test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber, &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_RED) {
+    } else if (TEST_LED_COLOR == LED_COLOR_RED) {
         LED_RED(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_AMBER) {
+    } else if (TEST_LED_COLOR == LED_COLOR_AMBER) {
         LED_AMBER(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                   &TEST_LED_COLOR);
-    } else if (TEST_LED_COLOR == COLOR_OFF) {
+    } else if (TEST_LED_COLOR == LED_COLOR_OFF) {
         LED_OFF(test_status_led_gpio_handle.pGPIOx, test_status_led_gpio_handle.GPIO_Config.GPIO_PinNumber,
                 &TEST_LED_COLOR);
     }
@@ -524,21 +549,21 @@ void FRONT_PANEL_BUTTON_RGB_INIT(){
 }
 
 void FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(uint8_t color){
-    if (color == COLOR_RED) {
+    if (color == LED_COLOR_RED) {
         GPIO_WriteOutputPin(start_release_button_red_gpio_handle.pGPIOx,
                             start_release_button_red_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
         GPIO_WriteOutputPin(start_release_button_blue_gpio_handle.pGPIOx,
                             start_release_button_blue_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
         GPIO_WriteOutputPin(start_release_button_green_gpio_handle.pGPIOx,
                             start_release_button_green_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
-    } else if (color == COLOR_GREEN) {
+    } else if (color == LED_COLOR_GREEN) {
         GPIO_WriteOutputPin(start_release_button_green_gpio_handle.pGPIOx,
                             start_release_button_green_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
         GPIO_WriteOutputPin(start_release_button_blue_gpio_handle.pGPIOx,
                             start_release_button_blue_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
         GPIO_WriteOutputPin(start_release_button_red_gpio_handle.pGPIOx,
                             start_release_button_red_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
-    } else if (color == COLOR_BLUE) {
+    } else if (color == LED_COLOR_BLUE) {
         GPIO_WriteOutputPin(start_release_button_blue_gpio_handle.pGPIOx,
                             start_release_button_blue_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
         GPIO_WriteOutputPin(start_release_button_green_gpio_handle.pGPIOx,
@@ -546,7 +571,7 @@ void FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(uint8_t color){
         GPIO_WriteOutputPin(start_release_button_red_gpio_handle.pGPIOx,
                             start_release_button_red_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
     }
-    else if (color == COLOR_AMBER) {
+    else if (color == LED_COLOR_AMBER) {
         GPIO_WriteOutputPin(start_release_button_blue_gpio_handle.pGPIOx,
                             start_release_button_blue_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
         GPIO_WriteOutputPin(start_release_button_green_gpio_handle.pGPIOx,
@@ -554,7 +579,7 @@ void FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(uint8_t color){
         GPIO_WriteOutputPin(start_release_button_red_gpio_handle.pGPIOx,
                             start_release_button_red_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
     }
-    else if (color == COLOR_OFF) {
+    else if (color == LED_COLOR_OFF) {
         GPIO_WriteOutputPin(start_release_button_blue_gpio_handle.pGPIOx,
                             start_release_button_blue_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
         GPIO_WriteOutputPin(start_release_button_green_gpio_handle.pGPIOx,
@@ -562,4 +587,59 @@ void FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(uint8_t color){
         GPIO_WriteOutputPin(start_release_button_red_gpio_handle.pGPIOx,
                             start_release_button_red_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
     }
+}
+
+void FRONT_PANEL_I2C_INT(){
+    i2c0_port_handle.pPORT = PORTB;
+    i2c0_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION2;
+    i2c0_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+    i2c0_port_handle.PORT_Config.PORT_Pin_Pull_Enable = ENABLE;
+    i2c0_port_handle.PORT_Config.PORT_Pin_Pull_Select = PULL_UP;
+
+    // SCL
+    i2c0_port_handle.PORT_Config.PORT_Pin_Number = 2;
+    PORT_Init(&i2c0_port_handle);
+
+    // SDA
+    i2c0_port_handle.PORT_Config.PORT_Pin_Number = 3;
+    PORT_Init(&i2c0_port_handle);
+
+    i2c0_handle.pI2Cx = I2C0;
+    i2c0_handle.I2C_Config.I2C_DeviceAddress = I2C_SLV_ADDRESS;
+    i2c0_handle.I2C_Config.I2C_AckControl = I2C_ACK_ENABLE;
+    I2C_Init(&i2c0_handle);
+
+    I2C_PeripheralControl(i2c0_handle.pI2Cx, ENABLE);
+    I2C_InterruptControl(i2c0_handle.pI2Cx, ENABLE);
+
+    IRQPriorityConfig(IRQ_NUMBER_I2C0, 3);
+    InterruptConfig(IRQ_NUMBER_I2C0, ENABLE);
+}
+
+void FRONT_PANEL_LIMIT_SWITCH_INIT(){
+    limit_switch_feedback_port_handle.pPORT = PORTB;
+    limit_switch_feedback_port_handle.PORT_Config.PORT_Pin_Number = 17;
+    limit_switch_feedback_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
+    limit_switch_feedback_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+    limit_switch_feedback_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
+    PORT_Init(&limit_switch_feedback_port_handle);
+
+    limit_switch_feedback_gpio_handle.pGPIOx = GPIOB;
+    limit_switch_feedback_gpio_handle.GPIO_Config.GPIO_PinNumber = 17;
+    limit_switch_feedback_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_INPUT;
+    GPIO_Init(&limit_switch_feedback_gpio_handle);
+}
+
+void FRONT_PANEL_DUT_POWER_CONTROL_INIT(){
+    dut_power_control_port_handle.pPORT = PORTB;
+    dut_power_control_port_handle.PORT_Config.PORT_Pin_Number = 19;
+    dut_power_control_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
+    dut_power_control_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+    dut_power_control_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
+    PORT_Init(&dut_power_control_port_handle);
+
+    dut_power_control_gpio_handle.pGPIOx = GPIOB;
+    dut_power_control_gpio_handle.GPIO_Config.GPIO_PinNumber = 19;
+    dut_power_control_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_INPUT;
+    GPIO_Init(&dut_power_control_gpio_handle);
 }
