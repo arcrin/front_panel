@@ -21,8 +21,15 @@
 /**********************************
  * JIG Status
  **********************************/
-#define READY       0
-#define BUSY        1
+#define STANDBY             0
+#define BUSY                1
+#define DISENGAGED          2
+#define ENGAGED             3
+#define DISENGAGING         4
+#define ENGAGING            5
+#define ERROR               6
+#define STANDBY_ENGAGED     7
+#define STANDBY_DISENGAGED  8
 
 void FRONT_PANEL_TEST_STATUS_LED_INIT();
 

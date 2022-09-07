@@ -10,6 +10,9 @@ GPIO_Handle_t start_release_button_gpio_handle;
 PORT_Handle_t latch_control_port_handle;
 GPIO_Handle_t latch_control_gpio_handle;
 
+PORT_Handle_t latch_detect_port_handle;
+GPIO_Handle_t latch_detect_gpio_handle;
+
 PORT_Handle_t master_relay_port_handle;
 GPIO_Handle_t master_relay_gpio_handle;
 
@@ -36,7 +39,7 @@ PORT_Handle_t act2_reverse_control_port_handle;
 PORT_Handle_t lpuart_port_handle;
 LPUART_Handle_t lpuart_handle;
 
-PORT_Handle_t act1_feedback_adc_port_handle;
+PORT_Handle_t act_feedback_adc_port_handle;
 ADC_Handle_t act_feedback_adc_handle;
 
 uint8_t TEST_LED_COLOR = LED_COLOR_OFF;
@@ -47,6 +50,9 @@ uint8_t JIG_LED_STATUS = SOLID;
 
 uint8_t ACT1_STATUS = STOP;
 uint8_t ACT2_STATUS = STOP;
+
+uint8_t TEST_LED_UPDATE_STATUS = UPDATED;
+uint8_t JIG_LED_UPDATE_STATUS = UPDATED;
 
 PORT_Handle_t start_release_button_red_port_handle;
 GPIO_Handle_t start_release_button_red_gpio_handle;
@@ -109,6 +115,18 @@ void FRONT_PANEL_LATCH_CONTROL_INIT(){
     latch_control_gpio_handle.GPIO_Config.GPIO_PinNumber = 23;
     latch_control_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_OUTPUT;
     GPIO_Init(&latch_control_gpio_handle);
+
+    latch_detect_port_handle.pPORT = PORTA;
+    latch_detect_port_handle.PORT_Config.PORT_Pin_Number = 4;
+    latch_detect_port_handle.PORT_Config.PORT_Pin_Function = ALT_FUNCTION1;
+    latch_detect_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+    latch_detect_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
+    PORT_Init(&latch_detect_port_handle);
+
+    latch_detect_gpio_handle.pGPIOx = GPIOA;
+    latch_detect_gpio_handle.GPIO_Config.GPIO_PinNumber = 4;
+    latch_detect_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_INPUT;
+    GPIO_Init(&latch_detect_gpio_handle);
 }
 
 void FRONT_PANEL_MASTER_RELAY_INIT(){
@@ -210,12 +228,12 @@ void FRONT_PANEL_LPUART_INIT(){
 }
 
 void FRONT_PANEL_ADC0_INIT(){
-    act1_feedback_adc_port_handle.pPORT = PORTB;
-    act1_feedback_adc_port_handle.PORT_Config.PORT_Pin_Function = PIN_DISABLED;
-    act1_feedback_adc_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
-    act1_feedback_adc_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
-    act1_feedback_adc_port_handle.PORT_Config.PORT_Pin_Number = 0;
-    PORT_Init(&act1_feedback_adc_port_handle);
+    act_feedback_adc_port_handle.pPORT = PORTB;
+    act_feedback_adc_port_handle.PORT_Config.PORT_Pin_Function = PIN_DISABLED;
+    act_feedback_adc_port_handle.PORT_Config.PORT_Pin_Interrupt_cfg = ISF_DISABLE;
+    act_feedback_adc_port_handle.PORT_Config.PORT_Pin_Pull_Enable = DISABLE;
+    act_feedback_adc_port_handle.PORT_Config.PORT_Pin_Number = 0;
+    PORT_Init(&act_feedback_adc_port_handle);
 
     act_feedback_adc_handle.pADCx = ADC0;
     // CFG1

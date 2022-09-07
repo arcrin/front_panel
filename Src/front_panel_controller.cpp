@@ -30,6 +30,7 @@ extern LPUART_Handle_t lpuart_handle;
 extern ADC_Handle_t act_feedback_adc_handle;
 
 extern GPIO_Handle_t latch_control_gpio_handle;
+extern GPIO_Handle_t latch_detect_gpio_handle;
 
 extern GPIO_Handle_t master_relay_gpio_handle;
 
@@ -43,8 +44,13 @@ extern uint8_t JIG_LED_COLOR;
 extern uint8_t TEST_LED_STATUS;
 extern uint8_t JIG_LED_STATUS;
 
+extern uint8_t TEST_LED_UPDATE_STATUS;
+extern uint8_t JIG_LED_UPDATE_STATUS;
+
 uint32_t test_led_time_stamp;
 uint32_t jig_led_time_stamp;
+uint32_t jig_disengage_time_stamp;
+uint32_t jig_engage_time_stamp;
 
 uint32_t start_release_button_time_stamp;
 
@@ -95,6 +101,63 @@ void master_relay_off() {
                         master_relay_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
 }
 
+bool latch_status(){
+    if (GPIO_ReadFromInputPin(latch_detect_gpio_handle.pGPIOx,
+                              latch_detect_gpio_handle.GPIO_Config.GPIO_PinNumber) == 0) {
+        return true;
+    } else if (GPIO_ReadFromInputPin(latch_detect_gpio_handle.pGPIOx,
+                                     latch_detect_gpio_handle.GPIO_Config.GPIO_PinNumber) == 1) {
+        return false;
+    }
+    return false;
+}
+
+uint8_t limit_switch_status() {
+    return GPIO_ReadFromInputPin(limit_switch_feedback_gpio_handle.pGPIOx,
+                                 limit_switch_feedback_gpio_handle.GPIO_Config.GPIO_PinNumber);
+}
+
+void dut_power_on(){
+    GPIO_WriteOutputPin(dut_power_control_gpio_handle.pGPIOx,
+                        dut_power_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+}
+
+void dut_power_off() {
+    GPIO_WriteOutputPin(dut_power_control_gpio_handle.pGPIOx,
+                        dut_power_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
+}
+
+void engage(){
+    ACT1_STATUS = FORWARD;
+    ACT2_STATUS = FORWARD;
+    ACT_SPEED = 100;
+    JIG_LED_STATUS = BLINK_AMBER;
+    JIG_STATUS = ENGAGING;
+    jig_engage_time_stamp = get_tenth_seconds();
+}
+
+void disengage(){
+    ACT1_STATUS = REVERSE;
+    ACT2_STATUS = REVERSE;
+    ACT_SPEED = 100;
+    JIG_LED_STATUS = BLINK_AMBER;
+    JIG_STATUS = DISENGAGING;
+    jig_disengage_time_stamp = get_tenth_seconds();
+}
+
+void update_test_led(uint8_t color) {
+    TEST_LED_STATUS = SOLID;
+    TEST_LED_COLOR = color;
+    TEST_LED_UPDATE_STATUS = UPDATE;
+}
+
+void update_jig_led(uint8_t color){
+    JIG_LED_STATUS = SOLID;
+    JIG_LED_COLOR = color;
+    JIG_LED_UPDATE_STATUS = UPDATE;
+}
+
+
 int main(){
     DISABLE_IRQ();
     MCG_Init();
@@ -111,19 +174,22 @@ int main(){
     FRONT_PANEL_ADC0_INIT();
     FRONT_PANEL_BUTTON_RGB_INIT();
     FRONT_PANEL_I2C_INT();
+    FRONT_PANEL_LIMIT_SWITCH_INIT();
+    FRONT_PANEL_DUT_POWER_CONTROL_INIT();
     LPTMR_Init();
 //    EPD_GPIO_Init();
 //    EPD_SPI_Init();
     RESET_INTERRUPT();
     ENABLE_IRQ();
-    JIG_STATUS = READY;
+    JIG_STATUS = STANDBY;
+    TEST_LED_COLOR = LED_COLOR_OFF;
+    JIG_LED_COLOR = LED_COLOR_OFF;
 
     latch_on();
-    master_relay_on();
+    master_relay_off();
+    disengage();
 
-    ACT1_STATUS = REVERSE;
-    ACT2_STATUS = REVERSE;
-    ACT_SPEED = 100;
+
     FRONT_PANEL_JIG_LED_OFF();
     FRONT_PANEL_TEST_LED_OFF();
 
@@ -152,15 +218,14 @@ int main(){
             if (ADC_Read(&act_feedback_adc_handle, AD8) > 0xE665){
                 FRONT_PANEL_ACT1_STOP();
                 JIG_LED_STATUS = SOLID;
-                FRONT_PANEL_JIG_LED_GREEN();
+                ACT1_STATUS = EXTENDED;
             }
-        }
-        else if(ACT1_STATUS == REVERSE){
+        } else if(ACT1_STATUS == REVERSE){
             FRONT_PANEL_ACT1_REVERSE(ACT_SPEED);
             if (ADC_Read(&act_feedback_adc_handle, AD8) < 0x6B84){
                 FRONT_PANEL_ACT1_STOP();
                 JIG_LED_STATUS = SOLID;
-                FRONT_PANEL_JIG_LED_GREEN();
+                ACT1_STATUS = RETRACTED;
             }
         }
 
@@ -169,15 +234,14 @@ int main(){
             if (ADC_Read(&act_feedback_adc_handle, AD9) > 0xE665){
                 FRONT_PANEL_ACT2_STOP();
                 JIG_LED_STATUS = SOLID;
-                FRONT_PANEL_JIG_LED_GREEN();
+                ACT2_STATUS = EXTENDED;
             }
-        }
-        else if(ACT2_STATUS == REVERSE){
+        } else if(ACT2_STATUS == REVERSE){
             FRONT_PANEL_ACT2_REVERSE(ACT_SPEED);
             if (ADC_Read(&act_feedback_adc_handle, AD9) < 0x6B84){
                 FRONT_PANEL_ACT2_STOP();
                 JIG_LED_STATUS = SOLID;
-                FRONT_PANEL_JIG_LED_GREEN();
+                ACT2_STATUS = RETRACTED;
             }
         }
 
@@ -186,6 +250,31 @@ int main(){
                 FRONT_PANEL_TEST_LED_BLINK_AMBER();
                 test_led_time_stamp = get_tenth_seconds();
             }
+        } else if (TEST_LED_STATUS == BLINK_RED) {
+            if ((get_tenth_seconds() - test_led_time_stamp) >= 3) {
+                FRONT_PANEL_TEST_LED_BLINK_RED();
+                test_led_time_stamp = get_tenth_seconds();
+            }
+        } else if (TEST_LED_STATUS == SOLID) {
+            if (TEST_LED_COLOR == LED_COLOR_RED) {
+                if (TEST_LED_UPDATE_STATUS == UPDATE) {
+                    FRONT_PANEL_TEST_LED_RED();
+                }
+            } else if (TEST_LED_COLOR == LED_COLOR_GREEN) {
+                if (TEST_LED_UPDATE_STATUS == UPDATE) {
+                    FRONT_PANEL_TEST_LED_GREEN();
+                }
+            } else if (TEST_LED_COLOR == LED_COLOR_AMBER) {
+                if (TEST_LED_UPDATE_STATUS == UPDATE) {
+                    FRONT_PANEL_TEST_LED_AMBER();
+                }
+            }
+            else if (TEST_LED_COLOR == LED_COLOR_OFF) {
+                if (TEST_LED_UPDATE_STATUS == UPDATE) {
+                    FRONT_PANEL_TEST_LED_OFF();
+                }
+            }
+            TEST_LED_UPDATE_STATUS = UPDATED;
         }
 
         if (JIG_LED_STATUS == BLINK_AMBER) {
@@ -193,32 +282,81 @@ int main(){
                 FRONT_PANEL_JIG_LED_BLINK_AMBER();
                 jig_led_time_stamp = get_tenth_seconds();
             }
-        }
-
-        if (TEST_LED_STATUS == BLINK_RED) {
-            if ((get_tenth_seconds() - test_led_time_stamp) >= 3) {
-                FRONT_PANEL_TEST_LED_BLINK_RED();
-                test_led_time_stamp = get_tenth_seconds();
-            }
-        }
-
-        if (JIG_LED_STATUS == BLINK_RED) {
+        } else if (JIG_LED_STATUS == BLINK_RED) {
             if ((get_tenth_seconds() - jig_led_time_stamp) >= 3) {
                 FRONT_PANEL_JIG_LED_BLINK_RED();
                 jig_led_time_stamp = get_tenth_seconds();
             }
+        } else if (JIG_LED_STATUS == SOLID) {
+           if (JIG_LED_COLOR == LED_COLOR_RED) {
+               if (JIG_LED_UPDATE_STATUS == UPDATE) {
+                   FRONT_PANEL_JIG_LED_RED();
+               }
+           } else if (JIG_LED_COLOR == LED_COLOR_GREEN) {
+               if (JIG_LED_UPDATE_STATUS == UPDATE) {
+                   FRONT_PANEL_JIG_LED_GREEN();
+               }
+           } else if (JIG_LED_COLOR == LED_COLOR_AMBER) {
+               if (JIG_LED_UPDATE_STATUS == UPDATE) {
+                   FRONT_PANEL_JIG_LED_AMBER();
+               }
+           }
+           else if (JIG_LED_COLOR == LED_COLOR_OFF) {
+               if (JIG_LED_UPDATE_STATUS == UPDATE) {
+                   FRONT_PANEL_JIG_LED_OFF();
+               }
+           }
+            JIG_LED_UPDATE_STATUS = UPDATED;
         }
+
+
 
         if (((i2c_rgb_parameters & 0xf0000) >> 16) == 0xf) {
             if (JIG_LED_COLOR != LED_COLOR_RED) {
-                FRONT_PANEL_JIG_LED_RED();
+                JIG_LED_COLOR = LED_COLOR_RED;
+            }
+        } else if (((i2c_rgb_parameters & 0xf000) >> 12) == 0xf) {
+            if (JIG_LED_COLOR != LED_COLOR_GREEN) {
+                JIG_LED_COLOR = LED_COLOR_GREEN;
             }
         }
 
-        if (((i2c_rgb_parameters & 0xf000) >> 12) == 0xf) {
-            if (JIG_LED_COLOR != LED_COLOR_GREEN) {
-                FRONT_PANEL_JIG_LED_GREEN();
+        if ((ACT1_STATUS == RETRACTED) and (ACT2_STATUS == RETRACTED)) {
+            if (JIG_STATUS != STANDBY_DISENGAGED) {
+                JIG_STATUS = DISENGAGED;
             }
+        } else if ((ACT1_STATUS == EXTENDED) and (ACT2_STATUS == EXTENDED)) {
+            if (JIG_STATUS != STANDBY_ENGAGED) {
+                JIG_STATUS = ENGAGED;
+            }
+        }
+
+        if (JIG_STATUS == DISENGAGING) {
+            if ((get_tenth_seconds() - jig_disengage_time_stamp) > 50) {
+                if (JIG_STATUS != ERROR) {
+                    update_jig_led(LED_COLOR_RED);
+                }
+                JIG_STATUS = ERROR;
+            }
+        } else if (JIG_STATUS == ENGAGING) {
+            if ((get_tenth_seconds() - jig_engage_time_stamp) > 50) {
+                if (JIG_STATUS != ERROR) {
+                    update_jig_led(LED_COLOR_RED);
+                }
+                JIG_STATUS = ERROR;
+            }
+        } else if (JIG_STATUS == ENGAGED) {
+            update_jig_led(LED_COLOR_GREEN);
+            JIG_STATUS = STANDBY_ENGAGED;
+        } else if (JIG_STATUS == DISENGAGED) {
+            update_jig_led(LED_COLOR_AMBER);
+            JIG_STATUS = STANDBY_DISENGAGED;
+        }
+
+        if (limit_switch_status() == 1) {
+            FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_GREEN);
+        } else {
+            FRONT_PANEL_START_RELEASE_BUTTON_RGB_CONTROL(LED_COLOR_RED);
         }
     }
 }
@@ -296,22 +434,19 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
             }
             else if(strcmp(cmd_buffer, "test led green") == 0) {
                 memset(cmd_buffer, 0, 256);
-                TEST_LED_STATUS = SOLID;
-                FRONT_PANEL_TEST_LED_GREEN();
+                update_test_led(LED_COLOR_GREEN);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "test led red") == 0) {
                 memset(cmd_buffer, 0, 256);
-                TEST_LED_STATUS = SOLID;
-                FRONT_PANEL_TEST_LED_RED();
+                update_test_led(LED_COLOR_RED);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "test led amber") == 0) {
                 memset(cmd_buffer, 0, 256);
-                TEST_LED_STATUS = SOLID;
-                FRONT_PANEL_TEST_LED_AMBER();
+                update_test_led(LED_COLOR_AMBER);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
@@ -331,29 +466,25 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
             }
             else if(strcmp(cmd_buffer, "test led off") == 0) {
                 memset(cmd_buffer, 0, 256);
-                TEST_LED_STATUS = SOLID;
-                FRONT_PANEL_TEST_LED_OFF();
+                update_test_led(LED_COLOR_OFF);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "jig led green") == 0) {
                 memset(cmd_buffer, 0, 256);
-                JIG_LED_STATUS = SOLID;
-                FRONT_PANEL_JIG_LED_GREEN();
+                update_jig_led(LED_COLOR_GREEN);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "jig led red") == 0) {
                 memset(cmd_buffer, 0, 256);
-                JIG_LED_STATUS = SOLID;
-                FRONT_PANEL_JIG_LED_RED();
+                update_jig_led(LED_COLOR_RED);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "jig led amber") == 0) {
                 memset(cmd_buffer, 0, 256);
-                JIG_LED_STATUS = SOLID;
-                FRONT_PANEL_JIG_LED_AMBER();
+                update_jig_led(LED_COLOR_AMBER);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
@@ -373,8 +504,7 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
             }
             else if(strcmp(cmd_buffer, "jig led off") == 0) {
                 memset(cmd_buffer, 0, 256);
-                JIG_LED_STATUS = SOLID;
-                FRONT_PANEL_JIG_LED_OFF();
+                update_jig_led(LED_COLOR_OFF);
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
@@ -418,15 +548,25 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
             }
             else if(strcmp(cmd_buffer, "latch on") == 0) {
                 memset(cmd_buffer, 0, 256);
-                GPIO_WriteOutputPin(latch_control_gpio_handle.pGPIOx,
-                                    latch_control_gpio_handle.GPIO_Config.GPIO_PinNumber, HIGH);
+                latch_on();
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
             else if(strcmp(cmd_buffer, "latch off") == 0) {
                 memset(cmd_buffer, 0, 256);
-                GPIO_WriteOutputPin(latch_control_gpio_handle.pGPIOx,
-                                    latch_control_gpio_handle.GPIO_Config.GPIO_PinNumber, LOW);
+                latch_off();
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
+            else if(strcmp(cmd_buffer, "latch status") == 0) {
+                memset(cmd_buffer, 0, 256);
+                if (latch_status()){
+                    LPUART_SendByte(pLPUARTHandle, '\n');
+                    LPUART_SendByte(pLPUARTHandle, 0x31);
+                } else if (!latch_status()){
+                    LPUART_SendByte(pLPUARTHandle, '\n');
+                    LPUART_SendByte(pLPUARTHandle, 0x30);
+                }
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
@@ -460,6 +600,47 @@ void LPUART_ApplicationEventCallback(pLPUART_Handle_t pLPUARTHandle, uint8_t app
                 LPUART_SendByte(pLPUARTHandle, '\n');
                 LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
             }
+            else if(strcmp(cmd_buffer, "master relay on") == 0) {
+                memset(cmd_buffer, 0, 256);
+                master_relay_on();
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
+            else if(strcmp(cmd_buffer, "master relay off") == 0) {
+                memset(cmd_buffer, 0, 256);
+                master_relay_off();
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
+
+            else if(strcmp(cmd_buffer, "dut on") == 0) {
+                memset(cmd_buffer, 0, 256);
+                dut_power_on();
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
+
+            else if(strcmp(cmd_buffer, "dut off") == 0) {
+                memset(cmd_buffer, 0, 256);
+                dut_power_off();
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
+
+            else if(strcmp(cmd_buffer, "engage") == 0) {
+                memset(cmd_buffer, 0, 256);
+                engage();
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
+
+            else if(strcmp(cmd_buffer, "disengage") == 0) {
+                memset(cmd_buffer, 0, 256);
+                disengage();
+                LPUART_SendByte(pLPUARTHandle, '\n');
+                LPUART_SendData(pLPUARTHandle, (uint8_t *) display_buffer, strlen(display_buffer));
+            }
+
             else{
                 memset(cmd_buffer, 0, 256);
                 LPUART_SendData(pLPUARTHandle, (uint8_t*) wrong_cmd_buffer, strlen(wrong_cmd_buffer));

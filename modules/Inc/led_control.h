@@ -23,6 +23,13 @@
 #define BLINK_AMBER     1
 #define BLINK_RED       2
 
+/******************************
+ * LED color change status
+ ******************************/
+#define UPDATE      0
+#define UPDATED     1
+
+
 void LED_GREEN(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name);
 
 void LED_RED(pGPIO_RegDef_t pGPIOx, uint8_t pin_number, uint8_t* led_name);
