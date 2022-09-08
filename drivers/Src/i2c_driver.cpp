@@ -281,12 +281,12 @@ void I2C_IRQHandling(I2C_Handle_t *pI2CHandle){
             i2c_channel->S &= ~(1 << I2C_S_ARBL);
         }
         else {
-            if (((I2C0->FLT & (1 << 6)) >> 6) == 1){
-                I2C0->FLT |= (1 << 6);
-                I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_DATA_STOP);
-            }
+//            if (((I2C0->FLT & (1 << 6)) >> 6) == 1){
+//                I2C0->FLT |= (1 << 6);
+//                I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_DATA_STOP);
+//            }
             // Arbitration Not Lost - Check if data byte is this device's Slave Address byte
-            else if (i2c_channel->S & (1 << I2C_S_IAAS)) {
+            if (i2c_channel->S & (1 << I2C_S_IAAS)) {
                 // Slave address matched - Check slave Read/Write bit
                 if (i2c_channel->S & (1 << I2C_S_SRW)) {
                     // Master was reading from slave - Set transmit mode
@@ -320,7 +320,7 @@ void I2C_IRQHandling(I2C_Handle_t *pI2CHandle){
                 else {
                     // Receive Mode - Read data from data register and store it
                     I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_DATA_RCV);
-            }
+                }
             }
         }
     }

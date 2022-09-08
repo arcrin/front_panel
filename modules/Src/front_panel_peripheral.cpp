@@ -658,6 +658,6 @@ void FRONT_PANEL_DUT_POWER_CONTROL_INIT(){
 
     dut_power_control_gpio_handle.pGPIOx = GPIOB;
     dut_power_control_gpio_handle.GPIO_Config.GPIO_PinNumber = 19;
-    dut_power_control_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_INPUT;
+    dut_power_control_gpio_handle.GPIO_Config.GPIO_PinDirection = GPIO_OUTPUT;
     GPIO_Init(&dut_power_control_gpio_handle);
 }
