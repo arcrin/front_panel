@@ -66,7 +66,7 @@ extern uint8_t ACT_SPEED;
 
 extern I2C_Handle_t i2c0_handle;
 
-uint8_t i2c_command_code;
+uint16_t i2c_command_code;
 
 uint8_t i2c_tx_buffer[] = "HiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHiHi...123A";
 
@@ -221,7 +221,7 @@ int main(){
 
 //    EPD_2IN66_Init();
 //    EPD_2IN66B_Clear();
-
+//
 //    uint8_t *BWImage, *RedImage;
 //
 //    uint16_t Imagesize =
@@ -337,15 +337,15 @@ int main(){
 
 
 
-        if (((i2c_rgb_parameters & 0xf0000) >> 16) == 0xf) {
-            if (JIG_LED_COLOR != LED_COLOR_RED) {
-                JIG_LED_COLOR = LED_COLOR_RED;
-            }
-        } else if (((i2c_rgb_parameters & 0xf000) >> 12) == 0xf) {
-            if (JIG_LED_COLOR != LED_COLOR_GREEN) {
-                JIG_LED_COLOR = LED_COLOR_GREEN;
-            }
-        }
+//        if (((i2c_rgb_parameters & 0xff000000) >> 16) == 0xf) {
+//            if (JIG_LED_COLOR != LED_COLOR_RED) {
+//                TEST_LED_COLOR = LED_COLOR_RED;
+//            }
+//        } else if (((i2c_rgb_parameters & 0xf000) >> 12) == 0xf) {
+//            if (JIG_LED_COLOR != LED_COLOR_GREEN) {
+//                TEST_LED_COLOR = LED_COLOR_GREEN;
+//            }
+//        }
 
 //        if ((ACT1_STATUS == RETRACTED) and (ACT2_STATUS == RETRACTED)) {
 //            if (JIG_STATUS != STANDBY_ACT_DISENGAGED) {
@@ -798,6 +798,12 @@ void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t app_event){
                 act_engage(0xE665);
             } else if (i2c_command_code == 0x8) {
                 act_disengage(0x6B84);
+            } else if (i2c_command_code == 0xa) {
+                update_test_led(LED_COLOR_RED);
+            } else if (i2c_command_code == 0xb) {
+                update_test_led(LED_COLOR_GREEN);
+            } else if (i2c_command_code == 0xc) {
+                update_test_led(LED_COLOR_OFF);
             }
         }
         else if (i2c_data_type == I2C_PARAMETER) {

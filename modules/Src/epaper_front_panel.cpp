@@ -89,8 +89,8 @@ void EPD_SPI_Init(){
     epd_spi_handle.pSPIx = SPI1;
     epd_spi_handle.SPIConfig.SPI_DeviceMode = SPI_DEVICE_MASTER_MODE;
     epd_spi_handle.SPIConfig.SPI_BusConfig = SPI_BUS_CONFIG_FD;
-    epd_spi_handle.SPIConfig.SPI_BR_PRE = SPI_SCLK_PRE_1;
-    epd_spi_handle.SPIConfig.SPI_BR_DIV = SPI_SCLK_SPEED_DIV2;
+    epd_spi_handle.SPIConfig.SPI_BR_PRE = SPI_SCLK_PRE_2;
+    epd_spi_handle.SPIConfig.SPI_BR_DIV = SPI_SCLK_SPEED_DIV4;
     epd_spi_handle.SPIConfig.SPI_MODE = SPI_8BIT_MODE;
     epd_spi_handle.SPIConfig.SPI_CPOL = SPI_CPOL_LOW;
     epd_spi_handle.SPIConfig.SPI_CPHA = SPI_CPHA_LOW;
